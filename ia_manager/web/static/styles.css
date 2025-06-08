@@ -1,47 +1,133 @@
+:root {
+    --bg-color: #0d0d0d;
+    --panel-bg: #1a1a1a;
+    --accent: #e3000f;
+    --text-color: #f0f0f0;
+    --muted-color: #888;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
-    padding: 0;
     display: flex;
+    flex-direction: column;
     height: 100vh;
 }
+
+header {
+    background: #111;
+    border-bottom: 2px solid var(--accent);
+    padding: 10px 20px;
+}
+
+header .logo {
+    color: var(--accent);
+    font-weight: bold;
+    margin-right: 6px;
+}
+
 #container {
     display: flex;
+    flex: 1;
     width: 100%;
 }
+
 aside {
     width: 20%;
-    padding: 10px;
-    border-right: 1px solid #ddd;
+    background: var(--panel-bg);
+    padding: 15px;
     box-sizing: border-box;
     overflow-y: auto;
 }
+
+aside h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 5px;
+}
+
 main#chat {
     flex: 1;
+    background: #121212;
     display: flex;
     flex-direction: column;
 }
+
 #chat-log {
     flex: 1;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    padding: 15px;
+    border-bottom: 1px solid var(--accent);
     overflow-y: auto;
 }
+
 #chat-input {
     display: flex;
     padding: 10px;
+    background: var(--panel-bg);
 }
+
 #chat-input input {
     flex: 1;
     margin-right: 5px;
+    background: #222;
+    border: 1px solid #333;
+    color: var(--text-color);
+    padding: 8px;
 }
+
+#chat-input button {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
 .form {
     margin-top: 10px;
+    display: flex;
 }
+
+.form input {
+    flex: 1;
+    background: #222;
+    border: 1px solid #333;
+    color: var(--text-color);
+    padding: 6px;
+}
+
+.form button {
+    margin-left: 5px;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
 ul {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
+
+li {
+    padding: 5px 0;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+}
+
+li.selected {
+    background: #333;
+}
+
 li.done {
     text-decoration: line-through;
+    color: var(--muted-color);
+}
+
+button:hover {
+    opacity: 0.85;
 }

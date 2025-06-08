@@ -8,13 +8,18 @@ async function loadProjects() {
     projects.forEach(p => {
         const li = document.createElement('li');
         li.textContent = p.name;
+        li.dataset.id = p.id;
         li.onclick = () => selectProject(p.id, p.name);
+        if (p.id === currentProject) li.classList.add('selected');
         list.appendChild(li);
     });
 }
 
 async function selectProject(id, name) {
     currentProject = id;
+    document.querySelectorAll('#project-list li').forEach(li => {
+        li.classList.toggle('selected', parseInt(li.dataset.id) === id);
+    });
     document.getElementById('tasks-title').textContent = `Tasks - ${name}`;
     const res = await fetch(`/api/projects/${id}`);
     const proj = await res.json();

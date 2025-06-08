@@ -13,7 +13,9 @@ generating documentation.
 
 ## Web interface
 
-A simple Flask-based web UI is available for managing projects and tasks.
+A Flask-based web UI is available for managing projects and tasks. The
+interface features a dark futuristic theme with red accents and a central chat
+area placeholder.
 Run it with:
 
 ```
