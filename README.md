@@ -14,8 +14,9 @@ generating documentation.
 ## Web interface
 
 A Flask-based web UI is available for managing projects and tasks. The
-interface features a dark futuristic theme with red accents and a central chat
-box. A light/dark toggle is available in the header.
+interface uses a dark futuristic theme with red accents and features a left
+navigation bar, a dynamic central area and a context panel with the daily
+planning.
 Run it with:
 
 ```
@@ -28,3 +29,5 @@ Click a task to view its details, mark it as done or delete it. A deadline can b
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 Use the **Planning** panel to pick a day and see tasks due that day.
 Press **What now?** to get an immediate recommendation from the planner.
+Navigate using the left menu to switch between the dashboard, project view,
+global tasks list, chat and settings.

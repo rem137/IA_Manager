@@ -1,6 +1,32 @@
 let currentProject = null;
 let currentTask = null;
 
+function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('#sidebar a').forEach(a => {
+        a.classList.toggle('active', a.dataset.view === id);
+    });
+    if (id === 'tasks-view') loadAllTasks();
+}
+
+async function loadAllTasks() {
+    const res = await fetch('/api/projects');
+    const projs = await res.json();
+    const list = document.getElementById('all-task-list');
+    list.innerHTML = '';
+    projs.forEach(p => {
+        p.tasks.forEach(t => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            if (t.status === 'done') li.classList.add('done');
+            li.textContent = `${p.name}: ${t.name}`;
+            list.appendChild(li);
+        });
+    });
+}
+
 async function loadProjects() {
     const res = await fetch('/api/projects');
     const projects = await res.json();
@@ -181,17 +207,21 @@ async function respondNotif(id, action) {
 document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     loadNotifications();
+    document.querySelectorAll('#sidebar a').forEach(a => {
+        a.onclick = (e) => { e.preventDefault(); showView(a.dataset.view); };
+    });
     const today = new Date().toISOString().slice(0,10);
     document.getElementById('plan-date').value = today;
     loadPlan(today);
     document.getElementById('plan-date').onchange = (e) => loadPlan(e.target.value);
     document.getElementById('recommend-btn').onclick = recommendTask;
-    document.getElementById('theme-toggle').onclick = toggleTheme;
     document.getElementById('send-btn').onclick = sendMessage;
     document.getElementById('message').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
     });
     setInterval(loadNotifications, 5000);
+    feather.replace();
+    showView('dashboard-view');
 });
 
 async function loadPlan(date) {
@@ -215,9 +245,6 @@ async function recommendTask() {
     div.textContent = recs.length ? recs[0] : 'No suggestions';
 }
 
-function toggleTheme() {
-    document.body.classList.toggle('light');
-}
 
 function sendMessage() {
     const input = document.getElementById('message');

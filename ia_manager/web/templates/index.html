@@ -4,45 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>IA Manager</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
 <header>
     <h1><span class="logo">IA</span> Manager</h1>
-    <button id="theme-toggle">Toggle theme</button>
 </header>
-<div id="container">
-    <aside id="projects">
-        <h2>Projects</h2>
-        <ul id="project-list"></ul>
-        <div class="form">
-            <input id="new-project-name" placeholder="New project name...">
-            <button onclick="createProject()">Add</button>
+<div id="layout">
+    <nav id="sidebar">
+        <a href="#" data-view="dashboard-view"><span class="icon" data-feather="home"></span><span>Dashboard</span></a>
+        <a href="#" data-view="projects-view"><span class="icon" data-feather="folder"></span><span>Projects</span></a>
+        <a href="#" data-view="tasks-view"><span class="icon" data-feather="check-square"></span><span>Tasks</span></a>
+        <a href="#" data-view="chat-view"><span class="icon" data-feather="message-circle"></span><span>Chat IA</span></a>
+        <a href="#" data-view="settings-view"><span class="icon" data-feather="settings"></span><span>Settings</span></a>
+    </nav>
+    <div id="content">
+        <section id="dashboard-view" class="view active">
+            <h2>Welcome</h2>
+            <p>This dashboard summarizes your projects and tasks.</p>
+            <div id="summary"></div>
+        </section>
+        <section id="projects-view" class="view">
+            <div id="project-list-section">
+                <h2>Projects</h2>
+                <ul id="project-list"></ul>
+                <div class="form">
+                    <input id="new-project-name" placeholder="New project name...">
+                    <button onclick="createProject()">Add</button>
+                </div>
+            </div>
+            <div id="task-section">
+                <h2 id="tasks-title" data-project="">Tasks</h2>
+                <ul id="task-list"></ul>
+                <div class="form">
+                    <input id="new-task-name" placeholder="Enter new task..." />
+                    <input id="new-task-deadline" type="date" />
+                    <button onclick="createTask()">Add</button>
+                </div>
+                <button id="recommend-btn" class="wide">What now?</button>
+                <div id="recommendation"></div>
+            </div>
+        </section>
+        <section id="tasks-view" class="view">
+            <h2>All Tasks</h2>
+            <ul id="all-task-list"></ul>
+        </section>
+        <section id="chat-view" class="view">
+            <div id="chat-log"></div>
+            <div id="chat-input">
+                <input id="message" placeholder="Type a message...">
+                <button id="send-btn">Send</button>
+            </div>
+        </section>
+        <section id="settings-view" class="view">
+            <h2>Settings</h2>
+            <p>Coming soon...</p>
+        </section>
+    </div>
+    <aside id="context">
+        <div id="planning">
+            <h2 id="plan-title">Schedule</h2>
+            <input type="date" id="plan-date">
+            <ul id="plan-list"></ul>
         </div>
-    </aside>
-    <main id="chat">
-        <div id="chat-log"></div>
-        <div id="chat-input">
-            <input id="message" placeholder="Type a message...">
-            <button id="send-btn">Send</button>
-        </div>
-    </main>
-    <aside id="tasks">
-        <h2 id="tasks-title" data-project="">Tasks</h2>
-        <ul id="task-list"></ul>
-        <div class="form">
-            <input id="new-task-name" placeholder="Enter new task..." />
-            <input id="new-task-deadline" type="date" />
-            <button onclick="createTask()">Add</button>
-        </div>
-        <button id="recommend-btn" style="margin-top:10px;">What now?</button>
-        <div id="recommendation"></div>
-    </aside>
-    <aside id="planning">
-        <h2 id="plan-title">Schedule</h2>
-        <input type="date" id="plan-date">
-        <ul id="plan-list"></ul>
+        <div id="notifications" class="notifications"></div>
     </aside>
 </div>
 <div id="task-modal" class="modal" style="display:none;">
@@ -56,7 +82,7 @@
         </div>
     </div>
 </div>
-<div id="notifications" class="notifications"></div>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.1/dist/feather.min.js"></script>
 <script src="/static/main.js"></script>
 </body>
 </html>

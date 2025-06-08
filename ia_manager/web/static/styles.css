@@ -1,96 +1,187 @@
 :root {
-    --bg-color: #0d0d0d;
-    --panel-bg: #1a1a1a;
-    --accent: #e3000f;
-    --text-color: #f0f0f0;
-    --muted-color: #888;
+    --bg-color: #121212;
+    --panel-bg: #1e1e1e;
+    --accent: #ff0033;
+    --text-color: #e0e0e0;
+    --muted-color: #777;
     --font-size: 14px;
 }
 
-body.light {
-    --bg-color: #ffffff;
-    --panel-bg: #f5f5f5;
-    --text-color: #111;
-    --muted-color: #555;
-}
-
 body {
-    font-family: 'Roboto', Arial, sans-serif;
+    font-family: 'Inter', Arial, sans-serif;
     background: var(--bg-color);
     color: var(--text-color);
     margin: 0;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     font-size: var(--font-size);
 }
 
 header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
     background: #111;
     border-bottom: 2px solid var(--accent);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 header .logo {
     color: var(--accent);
-    font-weight: bold;
+    font-weight: 600;
     margin-right: 6px;
 }
 
-#theme-toggle {
-    background: none;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 4px 8px;
-    cursor: pointer;
-}
-
-#container {
-    display: flex;
+#layout {
     flex: 1;
-    width: 100%;
+    display: flex;
     overflow: hidden;
 }
 
-aside {
-    width: 20%;
+#sidebar {
+    width: 200px;
     background: var(--panel-bg);
-    padding: 15px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
     border-right: 1px solid #222;
-}
-
-#planning {
-    width: 20%;
-    background: var(--panel-bg);
-    padding: 15px;
-    box-sizing: border-box;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
-#plan-date {
-    margin-bottom: 10px;
+#sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background 0.2s;
 }
 
-aside h2 {
+#sidebar a:hover,
+#sidebar a.active {
+    background: #2a2a2a;
+}
+
+#sidebar .icon {
+    margin-right: 8px;
+}
+
+#content {
+    flex: 1;
+    display: flex;
+    position: relative;
+}
+
+.view {
+    display: none;
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.view.active {
+    display: flex;
+    flex-direction: column;
+}
+
+#projects-view {
+    flex-direction: row;
+}
+
+#project-list-section {
+    width: 220px;
+    background: var(--panel-bg);
+    padding: 15px;
+    box-sizing: border-box;
+    border-right: 1px solid #222;
+    overflow-y: auto;
+}
+
+#task-section {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#context {
+    width: 260px;
+    background: var(--panel-bg);
+    padding: 15px;
+    box-sizing: border-box;
+    border-left: 1px solid #222;
+    overflow-y: auto;
+}
+
+h2 {
     margin-top: 0;
     border-bottom: 1px solid var(--accent);
     padding-bottom: 5px;
 }
 
-main#chat {
-    flex: 1;
-    background: #121212;
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    padding: 6px 0;
+    border-bottom: 1px solid #333;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+}
+
+li.selected {
+    background: #333;
+}
+
+li.done {
+    text-decoration: line-through;
+    color: var(--muted-color);
+}
+
+.project-item button,
+.task-item button {
+    margin-left: 4px;
+    background: none;
+    border: none;
+    color: var(--muted-color);
+    cursor: pointer;
+}
+
+.project-item button.critical,
+.task-item button.critical {
+    color: var(--accent);
+}
+
+.form {
+    margin-top: 10px;
+    display: flex;
+}
+
+.form input {
+    flex: 1;
+    background: #222;
+    border: 1px solid #333;
+    color: var(--text-color);
+    padding: 6px;
+    margin-right: 5px;
+}
+
+.form input[type="date"] {
+    width: 130px;
+    flex: none;
+}
+
+.form button,
+button.wide {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+button.wide {
+    margin-top: 10px;
 }
 
 #chat-log {
@@ -98,12 +189,6 @@ main#chat {
     padding: 15px;
     border-bottom: 1px solid var(--accent);
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-}
-
-.message {
-    margin: 2px 0;
 }
 
 #chat-input {
@@ -127,80 +212,6 @@ main#chat {
     color: #fff;
     padding: 8px 12px;
     cursor: pointer;
-}
-
-.form {
-    margin-top: 10px;
-    display: flex;
-}
-
-.form input {
-    flex: 1;
-    background: #222;
-    border: 1px solid #333;
-    color: var(--text-color);
-    padding: 6px;
-    margin-right: 5px;
-}
-
-.form input[type="date"] {
-    width: 130px;
-    flex: none;
-}
-
-.form button {
-    margin-left: 5px;
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    padding: 6px 10px;
-    cursor: pointer;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-li {
-    padding: 5px 0;
-    border-bottom: 1px solid #333;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.project-item button,
-.task-item button {
-    margin-left: 4px;
-    background: none;
-    border: none;
-    color: var(--muted-color);
-    cursor: pointer;
-}
-
-.project-item button.critical,
-.task-item button.critical {
-    color: var(--accent);
-}
-
-.project-item span,
-.task-item span {
-    flex: 1;
-}
-
-li.selected {
-    background: #333;
-}
-
-li.done {
-    text-decoration: line-through;
-    color: var(--muted-color);
-}
-
-button:hover {
-    opacity: 0.85;
 }
 
 .modal {
@@ -227,10 +238,7 @@ button:hover {
 }
 
 .notifications {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 250px;
+    margin-top: 20px;
 }
 
 .notification {
@@ -248,13 +256,12 @@ button:hover {
     font-weight: bold;
 }
 
-@media (max-width: 800px) {
-    aside {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #222;
+@media (max-width: 900px) {
+    #sidebar {
+        width: 60px;
     }
-    #container {
-        flex-direction: column;
+
+    #sidebar span:not(.icon) {
+        display: none;
     }
 }
