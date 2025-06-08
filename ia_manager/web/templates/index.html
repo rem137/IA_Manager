@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IA Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div id="container">
+    <aside id="projects">
+        <h2>Projects</h2>
+        <ul id="project-list"></ul>
+        <div class="form">
+            <input id="new-project-name" placeholder="New project name">
+            <button onclick="createProject()">Add</button>
+        </div>
+    </aside>
+    <main id="chat">
+        <div id="chat-log"></div>
+        <div id="chat-input">
+            <input id="message" placeholder="Chat with agent" disabled>
+            <button disabled>Send</button>
+        </div>
+    </main>
+    <aside id="tasks">
+        <h2 id="tasks-title">Tasks</h2>
+        <ul id="task-list"></ul>
+        <div class="form">
+            <input id="new-task-name" placeholder="New task" />
+            <button onclick="createTask()">Add</button>
+        </div>
+    </aside>
+</div>
+<script src="/static/main.js"></script>
+</body>
+</html>
