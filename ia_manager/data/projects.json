@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Exemple",
+    "description": "Projet d'exemple",
+    "priority": 3,
+    "deadline": "2024-12-31",
+    "status": "en cours",
+    "tasks": [
+      {"id": 1, "name": "Premiere tache", "estimated": 2, "deadline": "2024-06-01", "importance": 4, "status": "todo"},
+      {"id": 2, "name": "Deuxieme tache", "estimated": 1, "deadline": "2024-06-05", "importance": 3, "status": "done"}
+    ]
+  }
+]
