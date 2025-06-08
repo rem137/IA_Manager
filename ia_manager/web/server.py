@@ -2,8 +2,12 @@ from flask import Flask, jsonify, request, render_template
 from ..services import storage, planner, logger
 from ..models.project import Project
 from ..models.task import Task
+from ..models.notification import Notification
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
+
+# simple in-memory notification queue
+notifications: list[Notification] = []
 
 @app.route('/')
 def index():
@@ -60,6 +64,15 @@ def add_task(pid):
     logger.log(f"Web: added task {task.name} to project {proj.name}")
     return jsonify(task.to_dict())
 
+@app.route('/api/tasks/<int:tid>', methods=['GET'])
+def get_task(tid):
+    projects = storage.load_projects()
+    for p in projects:
+        for t in p.tasks:
+            if t.id == tid:
+                return jsonify(t.to_dict())
+    return jsonify({'error': 'not found'}), 404
+
 @app.route('/api/tasks/<int:tid>', methods=['PUT'])
 def update_task(tid):
     data = request.json
@@ -107,6 +120,28 @@ def recommendations():
     projs = storage.load_projects()
     recs = planner.suggest_tasks(projs)
     return jsonify(recs)
+
+
+@app.route('/api/notifications', methods=['GET', 'POST'])
+def notifications_api():
+    if request.method == 'POST':
+        data = request.json
+        nid = max([n.id for n in notifications], default=0) + 1
+        notif = Notification(id=nid, message=data.get('message', ''), action=data.get('action'))
+        notifications.append(notif)
+        logger.log(f"Web: added notification {nid}")
+        return jsonify(notif.__dict__), 201
+    return jsonify([n.__dict__ for n in notifications])
+
+
+@app.route('/api/notifications/<int:nid>/<action>', methods=['POST'])
+def handle_notification(nid, action):
+    for n in notifications:
+        if n.id == nid:
+            n.status = action
+            logger.log(f"Web: notification {nid} {action}")
+            return jsonify({'status': 'ok'})
+    return jsonify({'error': 'not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

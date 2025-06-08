@@ -36,6 +36,18 @@
         </div>
     </aside>
 </div>
+<div id="task-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3 id="detail-name"></h3>
+        <p id="detail-desc"></p>
+        <p>Deadline: <span id="detail-deadline"></span></p>
+        <div class="buttons">
+            <button onclick="markDone(currentTask)">Done</button>
+            <button onclick="closeTask()">Close</button>
+        </div>
+    </div>
+</div>
+<div id="notifications" class="notifications"></div>
 <script src="/static/main.js"></script>
 </body>
 </html>

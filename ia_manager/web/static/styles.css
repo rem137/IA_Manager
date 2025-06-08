@@ -131,3 +131,43 @@ li.done {
 button:hover {
     opacity: 0.85;
 }
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--panel-bg);
+    padding: 20px;
+    border: 1px solid var(--accent);
+    width: 300px;
+}
+
+.modal-content .buttons {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.notifications {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 250px;
+}
+
+.notification {
+    background: var(--panel-bg);
+    border: 1px solid var(--accent);
+    padding: 8px;
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
