@@ -24,5 +24,6 @@ python -m ia_manager.web.server
 
 The interface lists projects and their tasks and includes a chat area placeholder.
 Click a task to view its details, description and deadline, and mark it as done in a popup.
-Action notifications suggested by the AI appear in the bottom right corner with
-accept/decline buttons.
+Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
+Use the **Planning** panel to pick a day and see tasks due that day.
+Press **What now?** to get an immediate recommendation from the planner.

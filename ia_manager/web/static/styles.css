@@ -42,6 +42,14 @@ aside {
     overflow-y: auto;
 }
 
+#planning {
+    width: 20%;
+    background: var(--panel-bg);
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
 aside h2 {
     margin-top: 0;
     border-bottom: 1px solid var(--accent);
@@ -170,4 +178,9 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+#recommendation {
+    margin-top: 10px;
+    font-weight: bold;
 }

@@ -114,5 +114,30 @@ async function respondNotif(id, action) {
 document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     loadNotifications();
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('plan-date').value = today;
+    loadPlan(today);
+    document.getElementById('plan-date').onchange = (e) => loadPlan(e.target.value);
+    document.getElementById('recommend-btn').onclick = recommendTask;
     setInterval(loadNotifications, 5000);
 });
+
+async function loadPlan(date) {
+    const res = await fetch(`/api/calendar/${date}`);
+    const tasks = await res.json();
+    const list = document.getElementById('plan-list');
+    list.innerHTML = '';
+    tasks.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t.time ? `${t.time} - ${t.project}: ${t.task}`
+                               : `${t.project}: ${t.task}`;
+        list.appendChild(li);
+    });
+}
+
+async function recommendTask() {
+    const res = await fetch('/api/recommendations');
+    const recs = await res.json();
+    const div = document.getElementById('recommendation');
+    div.textContent = recs.length ? recs[0] : 'No suggestions';
+}

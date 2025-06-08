@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, render_template
+from datetime import datetime
 from ..services import storage, planner, logger
 from ..models.project import Project
 from ..models.task import Task
@@ -120,6 +121,33 @@ def recommendations():
     projs = storage.load_projects()
     recs = planner.suggest_tasks(projs)
     return jsonify(recs)
+
+
+@app.route('/api/calendar/<date_str>')
+def calendar_day(date_str: str):
+    """Return tasks due on a given date (YYYY-MM-DD)."""
+    try:
+        day = datetime.fromisoformat(date_str).date()
+    except ValueError:
+        return jsonify({'error': 'bad date'}), 400
+
+    projs = storage.load_projects()
+    tasks = []
+    for p in projs:
+        for t in p.tasks:
+            if not t.deadline:
+                continue
+            try:
+                d = datetime.fromisoformat(t.deadline)
+            except ValueError:
+                continue
+            if d.date() == day:
+                tasks.append({
+                    'project': p.name,
+                    'task': t.name,
+                    'time': d.strftime('%H:%M') if d.time().hour or d.time().minute else None
+                })
+    return jsonify(tasks)
 
 
 @app.route('/api/notifications', methods=['GET', 'POST'])
