@@ -44,6 +44,29 @@ def get_project(pid):
         return jsonify({'error': 'not found'}), 404
     return jsonify(proj.to_dict())
 
+@app.route('/api/projects/<int:pid>', methods=['PUT', 'DELETE'])
+def modify_project(pid):
+    """Rename or delete a project."""
+    projects = storage.load_projects()
+    proj = next((p for p in projects if p.id == pid), None)
+    if not proj:
+        return jsonify({'error': 'not found'}), 404
+
+    if request.method == 'DELETE':
+        projects.remove(proj)
+        storage.save_projects(projects)
+        logger.log(f"Web: deleted project {pid}")
+        return jsonify({'status': 'ok'})
+
+    data = request.json
+    proj.name = data.get('name', proj.name)
+    proj.description = data.get('description', proj.description)
+    proj.priority = data.get('priority', proj.priority)
+    proj.deadline = data.get('deadline', proj.deadline)
+    storage.save_projects(projects)
+    logger.log(f"Web: updated project {pid}")
+    return jsonify(proj.to_dict())
+
 @app.route('/api/projects/<int:pid>/tasks', methods=['POST'])
 def add_task(pid):
     data = request.json

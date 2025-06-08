@@ -4,6 +4,14 @@
     --accent: #e3000f;
     --text-color: #f0f0f0;
     --muted-color: #888;
+    --font-size: 14px;
+}
+
+body.light {
+    --bg-color: #ffffff;
+    --panel-bg: #f5f5f5;
+    --text-color: #111;
+    --muted-color: #555;
 }
 
 body {
@@ -14,12 +22,16 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    font-size: var(--font-size);
 }
 
 header {
     background: #111;
     border-bottom: 2px solid var(--accent);
     padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 header .logo {
@@ -28,10 +40,19 @@ header .logo {
     margin-right: 6px;
 }
 
+#theme-toggle {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
 #container {
     display: flex;
     flex: 1;
     width: 100%;
+    overflow: hidden;
 }
 
 aside {
@@ -40,6 +61,9 @@ aside {
     padding: 15px;
     box-sizing: border-box;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #222;
 }
 
 #planning {
@@ -48,6 +72,12 @@ aside {
     padding: 15px;
     box-sizing: border-box;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#plan-date {
+    margin-bottom: 10px;
 }
 
 aside h2 {
@@ -68,6 +98,12 @@ main#chat {
     padding: 15px;
     border-bottom: 1px solid var(--accent);
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    margin: 2px 0;
 }
 
 #chat-input {
@@ -104,6 +140,12 @@ main#chat {
     border: 1px solid #333;
     color: var(--text-color);
     padding: 6px;
+    margin-right: 5px;
+}
+
+.form input[type="date"] {
+    width: 130px;
+    flex: none;
 }
 
 .form button {
@@ -125,6 +167,27 @@ li {
     padding: 5px 0;
     border-bottom: 1px solid #333;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.project-item button,
+.task-item button {
+    margin-left: 4px;
+    background: none;
+    border: none;
+    color: var(--muted-color);
+    cursor: pointer;
+}
+
+.project-item button.critical,
+.task-item button.critical {
+    color: var(--accent);
+}
+
+.project-item span,
+.task-item span {
+    flex: 1;
 }
 
 li.selected {
@@ -183,4 +246,15 @@ button:hover {
 #recommendation {
     margin-top: 10px;
     font-weight: bold;
+}
+
+@media (max-width: 800px) {
+    aside {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #222;
+    }
+    #container {
+        flex-direction: column;
+    }
 }

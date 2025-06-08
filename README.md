@@ -15,15 +15,16 @@ generating documentation.
 
 A Flask-based web UI is available for managing projects and tasks. The
 interface features a dark futuristic theme with red accents and a central chat
-area placeholder.
+box. A light/dark toggle is available in the header.
 Run it with:
 
 ```
 python -m ia_manager.web.server
 ```
 
-The interface lists projects and their tasks and includes a chat area placeholder.
-Click a task to view its details, description and deadline, and mark it as done in a popup.
+The interface lists projects and their tasks and includes a chat area.
+Projects can be renamed or deleted directly in the list.
+Click a task to view its details, mark it as done or delete it. A deadline can be entered when creating a task.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 Use the **Planning** panel to pick a day and see tasks due that day.
 Press **What now?** to get an immediate recommendation from the planner.
