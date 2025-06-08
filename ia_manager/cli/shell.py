@@ -1,12 +1,13 @@
 import shlex
+from colorama import Fore, Style, init
 from .commands import build_parser
 
 LOGO = r"""
-  ___ ___    ___  ___  _   _            
- |_ _|_ _|  / _ \| _ )| | | | __ _ _ __ 
+  ___ ___    ___  ___  _   _
+ |_ _|_ _|  / _ \| _ )| | | | __ _ _ __
   | | | |  | (_) | _ \| |_| |/ _` | '_ \
  |___|___|  \___/|___/ \___/| (_|_| .__/
-                                  |_|   
+                                  |_|
 """
 
 COMMAND_HELP = """Available commands:
@@ -26,12 +27,13 @@ COMMAND_HELP = """Available commands:
 """
 
 def interactive_loop():
+    init(autoreset=True)
     parser = build_parser()
-    print(LOGO)
-    print(COMMAND_HELP)
+    print(Fore.CYAN + LOGO + Style.RESET_ALL)
+    print(Fore.YELLOW + COMMAND_HELP + Style.RESET_ALL)
     while True:
         try:
-            raw = input("ia> ").strip()
+            raw = input(Fore.GREEN + "ia> " + Style.RESET_ALL).strip()
         except (EOFError, KeyboardInterrupt):
             print()
             break
@@ -51,5 +53,5 @@ def interactive_loop():
         except SystemExit:
             # argparse errors
             pass
-    print("Bye!")
+    print(Fore.CYAN + "Bye!" + Style.RESET_ALL)
 
