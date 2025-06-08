@@ -10,16 +10,19 @@ LOGO = r"""
 """
 
 COMMAND_HELP = """Available commands:
-  add-project NAME [--description DESC --priority N --deadline YYYY-MM-DD]
-  list-projects
-  update-project ID [--description DESC --priority N --deadline YYYY-MM-DD]
-  delete-project ID
-  add-task PROJECT_ID NAME [--estimated H] [--deadline YYYY-MM-DD] [--importance N]
-  list-tasks PROJECT_ID [--status STATUS] [--importance N]
-  update-task PROJECT_ID TASK_ID [--status STATUS] [--name NAME] [--estimated H]
-                               [--deadline YYYY-MM-DD] [--importance N]
-  delete-task PROJECT_ID TASK_ID
-  plan
+  create_project NAME [--description DESC --priority N --deadline YYYY-MM-DD]
+  list_projects
+  delete_project ID|NAME
+  rename_project ID|NAME NEW_NAME
+  archive_project ID|NAME
+  add_task PROJECT TITLE [--due JJ/MM]
+  list_tasks PROJECT [--all|--done]
+  mark_done TASK_ID
+  delete_task TASK_ID
+  update_task TASK_ID [--title NAME --due JJ/MM --desc TEXT]
+  show_status
+  plan_day [JJ/MM]
+  recommend_task
   calendar
   help
   quit

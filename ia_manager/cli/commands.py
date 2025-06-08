@@ -8,9 +8,10 @@ import calendar
 from datetime import datetime, date
 
 
-def _find_project(projects: List[Project], project_id: int) -> Optional[Project]:
+def _find_project(projects: List[Project], ident) -> Optional[Project]:
+    """Return project by id or name"""
     for p in projects:
-        if p.id == project_id:
+        if p.id == ident or p.name == ident:
             return p
     return None
 
@@ -58,25 +59,61 @@ def update_project(args):
 
 def delete_project(args):
     projects = storage.load_projects()
-    projects = [p for p in projects if p.id != args.id]
+    proj = _find_project(projects, args.project)
+    if not proj:
+        print("Project not found")
+        return
+    projects = [p for p in projects if p.id != proj.id]
     storage.save_projects(projects)
-    logger.log(f"Deleted project {args.id}")
+    logger.log(f"Deleted project {proj.id}")
     print("Project deleted")
+
+
+def rename_project(args):
+    projects = storage.load_projects()
+    proj = _find_project(projects, args.project)
+    if not proj:
+        print("Project not found")
+        return
+    proj.name = args.new_name
+    storage.save_projects(projects)
+    logger.log(f"Renamed project {proj.id} to {proj.name}")
+    print("Project renamed")
+
+
+def archive_project(args):
+    projects = storage.load_projects()
+    proj = _find_project(projects, args.project)
+    if not proj:
+        print("Project not found")
+        return
+    proj.status = "archive"
+    storage.save_projects(projects)
+    logger.log(f"Archived project {proj.id}")
+    print("Project archived")
 
 
 def add_task(args):
     projects = storage.load_projects()
-    project = _find_project(projects, args.project_id)
+    project = _find_project(projects, args.project)
     if not project:
         print("Project not found")
         return
     task_id = max([t.id for t in project.tasks], default=0) + 1
+    due_iso = None
+    if args.due:
+        try:
+            due_iso = datetime.strptime(args.due, "%d/%m").replace(year=date.today().year).date().isoformat()
+        except ValueError:
+            print("Invalid due date format. Use JJ/MM")
+            return
     task = Task(
         id=task_id,
         name=args.name,
         estimated=args.estimated,
-        deadline=args.deadline,
+        deadline=due_iso,
         importance=args.importance,
+        description=args.description or "",
     )
     project.tasks.append(task)
     storage.save_projects(projects)
@@ -86,15 +123,19 @@ def add_task(args):
 
 def list_tasks(args):
     projects = storage.load_projects()
-    project = _find_project(projects, args.project_id)
+    project = _find_project(projects, args.project)
     if not project:
         print("Project not found")
         return
-    tasks = project.tasks
-    for t in tasks:
-        if args.status and t.status != args.status:
-            continue
-        if args.importance and t.importance != args.importance:
+    status_filter = None
+    if args.all:
+        status_filter = None
+    elif args.done:
+        status_filter = "done"
+    else:
+        status_filter = "todo"
+    for t in project.tasks:
+        if status_filter and t.status != status_filter:
             continue
         status_col = Fore.GREEN if t.status == "done" else Fore.CYAN
         status_text = color(f"[{t.status}]", status_col)
@@ -103,24 +144,35 @@ def list_tasks(args):
 
 def update_task(args):
     projects = storage.load_projects()
-    project = _find_project(projects, args.project_id)
-    if not project:
-        print("Project not found")
-        return
-    task = next((t for t in project.tasks if t.id == args.task_id), None)
+    project = None
+    task = None
+    for p in projects:
+        for t in p.tasks:
+            if t.id == args.task_id:
+                project = p
+                task = t
+                break
+        if task:
+            break
     if not task:
         print("Task not found")
         return
     if args.status:
         task.status = args.status
-    if args.name:
-        task.name = args.name
+    if args.title:
+        task.name = args.title
     if args.estimated is not None:
         task.estimated = args.estimated
-    if args.deadline is not None:
-        task.deadline = args.deadline
+    if args.due is not None:
+        try:
+            task.deadline = datetime.strptime(args.due, "%d/%m").replace(year=date.today().year).date().isoformat()
+        except ValueError:
+            print("Invalid due date format")
+            return
     if args.importance is not None:
         task.importance = args.importance
+    if args.desc is not None:
+        task.description = args.desc
     storage.save_projects(projects)
     logger.log(f"Updated task {task.id} in project {project.name}")
     print("Task updated")
@@ -128,17 +180,95 @@ def update_task(args):
 
 def delete_task(args):
     projects = storage.load_projects()
-    project = _find_project(projects, args.project_id)
-    if not project:
+    for p in projects:
+        for t in list(p.tasks):
+            if t.id == args.task_id:
+                p.tasks.remove(t)
+                storage.save_projects(projects)
+                logger.log(f"Deleted task {args.task_id} from project {p.name}")
+                print("Task deleted")
+                return
+    print("Task not found")
+
+
+def mark_done(args):
+    projects = storage.load_projects()
+    for p in projects:
+        for t in p.tasks:
+            if t.id == args.task_id:
+                t.status = "done"
+                storage.save_projects(projects)
+                logger.log(f"Marked task {t.id} as done")
+                print("Task marked as done")
+                return
+    print("Task not found")
+
+
+def show_status(_args):
+    projects = storage.load_projects()
+    for p in projects:
+        status_text = color(f"[{p.status}]", Fore.GREEN if p.status == "termine" else Fore.YELLOW if p.status == "en pause" else Fore.CYAN)
+        print(f"{p.name} {status_text} {p.progress()}% done")
+
+
+def plan_day(args):
+    target = date.today()
+    if args.date:
+        try:
+            target = datetime.strptime(args.date, "%d/%m").replace(year=date.today().year).date()
+        except ValueError:
+            print("Invalid date format")
+            return
+    suggestions = planner.suggest_tasks(storage.load_projects())
+    print(f"Plan for {target}:")
+    for s in suggestions[:5]:
+        print(f"- {s}")
+
+
+def doc_update(args):
+    projects = storage.load_projects()
+    proj = _find_project(projects, args.project)
+    if not proj:
         print("Project not found")
         return
-    project.tasks = [t for t in project.tasks if t.id != args.task_id]
-    storage.save_projects(projects)
-    logger.log(f"Deleted task {args.task_id} from project {project.name}")
-    print("Task deleted")
+    path = storage.DOCS_DIR / f"{proj.name}.md"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"# {proj.name}\n\n{proj.description}\n\n## Tasks\n")
+        for t in proj.tasks:
+            mark = "x" if t.status == "done" else " "
+            f.write(f"- [{mark}] {t.name}\n")
+    print(f"Documentation written to {path}")
 
 
-def plan(_args):
+def doc_show_cmd(args):
+    path = storage.DOCS_DIR / f"{args.project}.md"
+    if not path.exists():
+        print("No documentation found")
+        return
+    print(path.read_text())
+
+
+def list_improvements(_args):
+    items = storage.load_improvements()
+    for i, imp in enumerate(items, 1):
+        print(f"{i}. {imp}")
+
+
+def add_improvement(args):
+    items = storage.load_improvements()
+    items.append(args.desc)
+    storage.save_improvements(items)
+    print("Improvement added")
+
+
+def plan_self_update(_args):
+    items = storage.load_improvements()
+    items.append("Improve the IA manager itself")
+    storage.save_improvements(items)
+    print("Self update planned")
+
+
+def recommend_task(_args):
     projects = storage.load_projects()
     suggestions = planner.suggest_tasks(projects)
     print("Suggested tasks:")
@@ -186,61 +316,87 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     # Project commands
-    p_add = sub.add_parser("add-project")
+    p_add = sub.add_parser("create_project")
     p_add.add_argument("name")
     p_add.add_argument("--description", default="")
     p_add.add_argument("--priority", type=int, default=3)
     p_add.add_argument("--deadline")
     p_add.set_defaults(func=add_project)
 
-    p_list = sub.add_parser("list-projects")
+    p_list = sub.add_parser("list_projects")
     p_list.set_defaults(func=list_projects)
 
-    p_upd = sub.add_parser("update-project")
-    p_upd.add_argument("id", type=int)
-    p_upd.add_argument("--description")
-    p_upd.add_argument("--deadline")
-    p_upd.add_argument("--priority", type=int)
-    p_upd.set_defaults(func=update_project)
-
-    p_del = sub.add_parser("delete-project")
-    p_del.add_argument("id", type=int)
+    p_del = sub.add_parser("delete_project")
+    p_del.add_argument("project")
     p_del.set_defaults(func=delete_project)
 
+    p_ren = sub.add_parser("rename_project")
+    p_ren.add_argument("project")
+    p_ren.add_argument("new_name")
+    p_ren.set_defaults(func=rename_project)
+
+    p_arc = sub.add_parser("archive_project")
+    p_arc.add_argument("project")
+    p_arc.set_defaults(func=archive_project)
+
     # Task commands
-    t_add = sub.add_parser("add-task")
-    t_add.add_argument("project_id", type=int)
+    t_add = sub.add_parser("add_task")
+    t_add.add_argument("project")
     t_add.add_argument("name")
+    t_add.add_argument("--due")
     t_add.add_argument("--estimated", type=int)
-    t_add.add_argument("--deadline")
     t_add.add_argument("--importance", type=int, default=3)
+    t_add.add_argument("--description")
     t_add.set_defaults(func=add_task)
 
-    t_list = sub.add_parser("list-tasks")
-    t_list.add_argument("project_id", type=int)
-    t_list.add_argument("--status")
-    t_list.add_argument("--importance", type=int)
+    t_list = sub.add_parser("list_tasks")
+    t_list.add_argument("project")
+    t_list.add_argument("--all", action="store_true")
+    t_list.add_argument("--done", action="store_true")
     t_list.set_defaults(func=list_tasks)
 
-    t_upd = sub.add_parser("update-task")
-    t_upd.add_argument("project_id", type=int)
-    t_upd.add_argument("task_id", type=int)
-    t_upd.add_argument("--status")
-    t_upd.add_argument("--name")
-    t_upd.add_argument("--estimated", type=int)
-    t_upd.add_argument("--deadline")
-    t_upd.add_argument("--importance", type=int)
-    t_upd.set_defaults(func=update_task)
+    t_mark = sub.add_parser("mark_done")
+    t_mark.add_argument("task_id", type=int)
+    t_mark.set_defaults(func=mark_done)
 
-    t_del = sub.add_parser("delete-task")
-    t_del.add_argument("project_id", type=int)
+    t_del = sub.add_parser("delete_task")
     t_del.add_argument("task_id", type=int)
     t_del.set_defaults(func=delete_task)
 
-    plan_cmd = sub.add_parser("plan")
-    plan_cmd.set_defaults(func=plan)
+    t_upd = sub.add_parser("update_task")
+    t_upd.add_argument("task_id", type=int)
+    t_upd.add_argument("--title")
+    t_upd.add_argument("--due")
+    t_upd.add_argument("--desc")
+    t_upd.add_argument("--estimated", type=int)
+    t_upd.add_argument("--importance", type=int)
+    t_upd.add_argument("--status")
+    t_upd.set_defaults(func=update_task)
 
-    cal_cmd = sub.add_parser("calendar")
-    cal_cmd.set_defaults(func=show_calendar)
+    sub.add_parser("show_status").set_defaults(func=show_status)
+
+    p_day = sub.add_parser("plan_day")
+    p_day.add_argument("date", nargs="?")
+    p_day.set_defaults(func=plan_day)
+
+    sub.add_parser("recommend_task").set_defaults(func=recommend_task)
+
+    doc_upd = sub.add_parser("doc_update")
+    doc_upd.add_argument("project")
+    doc_upd.set_defaults(func=doc_update)
+
+    doc_show = sub.add_parser("doc_show")
+    doc_show.add_argument("project")
+    doc_show.set_defaults(func=doc_show_cmd)
+
+    sub.add_parser("list_improvements").set_defaults(func=list_improvements)
+
+    imp_add = sub.add_parser("add_improvement")
+    imp_add.add_argument("desc")
+    imp_add.set_defaults(func=add_improvement)
+
+    sub.add_parser("plan_self_update").set_defaults(func=plan_self_update)
+
+    sub.add_parser("calendar").set_defaults(func=show_calendar)
 
     return parser

@@ -9,6 +9,7 @@ class Task:
     deadline: Optional[str] = None  # YYYY-MM-DD
     importance: int = 3
     status: str = "todo"  # todo, done
+    description: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -18,6 +19,7 @@ class Task:
             "deadline": self.deadline,
             "importance": self.importance,
             "status": self.status,
+            "description": self.description,
         }
 
     @staticmethod
@@ -29,4 +31,5 @@ class Task:
             deadline=data.get("deadline"),
             importance=data.get("importance", 3),
             status=data.get("status", "todo"),
+            description=data.get("description", ""),
         )

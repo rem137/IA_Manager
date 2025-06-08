@@ -7,8 +7,11 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 PROJECTS_FILE = DATA_DIR / "projects.json"
 CONFIG_FILE = DATA_DIR / "config.json"
 LOG_FILE = DATA_DIR / "log.txt"
+DOCS_DIR = DATA_DIR / "docs"
+IMPROVEMENTS_FILE = DATA_DIR / "improvements.json"
 
 DATA_DIR.mkdir(exist_ok=True)
+DOCS_DIR.mkdir(exist_ok=True)
 
 
 def load_projects() -> List[Project]:
@@ -34,3 +37,15 @@ def load_config() -> dict:
 def save_config(config: dict):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
+
+
+def load_improvements() -> list:
+    if not IMPROVEMENTS_FILE.exists():
+        return []
+    with open(IMPROVEMENTS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_improvements(items: list):
+    with open(IMPROVEMENTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
