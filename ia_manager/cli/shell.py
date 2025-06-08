@@ -1,13 +1,12 @@
 import shlex
-from colorama import Fore, Style, init
+from ..utils import color, Fore
 from .commands import build_parser
 
 LOGO = r"""
-  ___ ___    ___  ___  _   _
- |_ _|_ _|  / _ \| _ )| | | | __ _ _ __
-  | | | |  | (_) | _ \| |_| |/ _` | '_ \
- |___|___|  \___/|___/ \___/| (_|_| .__/
-                                  |_|
+  ___        __  __
+ |_ _|_ _   |  \/  |__ _ _ _  __ _ ___
+  | || ' \  | |\/| / _` | ' \/ _` (_-<
+ |___|_||_| |_|  |_\__,_|_||_\__,_/__/
 """
 
 COMMAND_HELP = """Available commands:
@@ -27,13 +26,12 @@ COMMAND_HELP = """Available commands:
 """
 
 def interactive_loop():
-    init(autoreset=True)
     parser = build_parser()
-    print(Fore.CYAN + LOGO + Style.RESET_ALL)
-    print(Fore.YELLOW + COMMAND_HELP + Style.RESET_ALL)
+    print(color(LOGO, Fore.CYAN))
+    print(color(COMMAND_HELP, Fore.YELLOW))
     while True:
         try:
-            raw = input(Fore.GREEN + "ia> " + Style.RESET_ALL).strip()
+            raw = input(color("ia> ", Fore.GREEN)).strip()
         except (EOFError, KeyboardInterrupt):
             print()
             break
@@ -53,5 +51,5 @@ def interactive_loop():
         except SystemExit:
             # argparse errors
             pass
-    print(Fore.CYAN + "Bye!" + Style.RESET_ALL)
+    print(color("Bye!", Fore.CYAN))
 

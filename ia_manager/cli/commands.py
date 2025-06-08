@@ -3,6 +3,7 @@ from typing import List, Optional
 from ..models.project import Project
 from ..models.task import Task
 from ..services import storage, logger, planner
+from ..utils import color, Fore
 import calendar
 from datetime import datetime, date
 
@@ -33,7 +34,9 @@ def add_project(args):
 def list_projects(_args):
     projects = storage.load_projects()
     for p in projects:
-        print(f"{p.id}: {p.name} [{p.status}] priority:{p.priority} progress:{p.progress()}%")
+        status_text = color(f"[{p.status}]", Fore.GREEN if p.status == "termine" else Fore.YELLOW if p.status == "en pause" else Fore.CYAN)
+        bar = "█" * (p.progress() // 10)
+        print(f"{p.id}: {p.name} {status_text} priority:{p.priority} {bar:<10} {p.progress()}%")
 
 
 def update_project(args):
@@ -93,7 +96,9 @@ def list_tasks(args):
             continue
         if args.importance and t.importance != args.importance:
             continue
-        print(f"{t.id}: {t.name} [{t.status}] importance:{t.importance}")
+        status_col = Fore.GREEN if t.status == "done" else Fore.CYAN
+        status_text = color(f"[{t.status}]", status_col)
+        print(f"{t.id}: {t.name} {status_text} importance:{t.importance}")
 
 
 def update_task(args):
@@ -138,7 +143,7 @@ def plan(_args):
     suggestions = planner.suggest_tasks(projects)
     print("Suggested tasks:")
     for s in suggestions:
-        print(f"- {s}")
+        print(color(f"- {s}", Fore.MAGENTA))
 
 
 def show_calendar(_args):
@@ -164,7 +169,10 @@ def show_calendar(_args):
                 line.append("  ")
             else:
                 mark = "*" if day in tasks_by_day else " "
-                line.append(f"{day:2d}{mark}")
+                cell = f"{day:2d}{mark}"
+                if day in tasks_by_day:
+                    cell = color(cell, Fore.GREEN)
+                line.append(cell)
         print(" ".join(line))
     if tasks_by_day:
         print("\nLegend: * task due")
