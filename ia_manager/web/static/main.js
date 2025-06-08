@@ -9,6 +9,7 @@ function showView(id) {
         a.classList.toggle('active', a.dataset.view === id);
     });
     if (id === 'tasks-view') loadAllTasks();
+    if (id === 'dashboard-view') loadDashboard();
 }
 
 async function loadAllTasks() {
@@ -132,19 +133,31 @@ async function deleteProject(id) {
     loadProjects();
 }
 
-async function createTask() {
+function openTaskForm() {
     if (!currentProject) return;
-    const name = document.getElementById('new-task-name').value.trim();
-    const deadline = document.getElementById('new-task-deadline').value || null;
+    document.getElementById('task-form').style.display = 'flex';
+}
+
+function closeTaskForm() {
+    document.getElementById('task-form').style.display = 'none';
+}
+
+async function submitTask() {
+    if (!currentProject) return;
+    const name = document.getElementById('task-name-input').value.trim();
+    const desc = document.getElementById('task-desc-input').value.trim();
+    const deadline = document.getElementById('task-deadline-input').value || null;
     if (!name) return;
     await fetch(`/api/projects/${currentProject}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, deadline })
+        body: JSON.stringify({ name, description: desc, deadline })
     });
-    document.getElementById('new-task-name').value = '';
-    document.getElementById('new-task-deadline').value = '';
-    selectProject(currentProject, document.getElementById('tasks-title').textContent);
+    document.getElementById('task-name-input').value = '';
+    document.getElementById('task-desc-input').value = '';
+    document.getElementById('task-deadline-input').value = '';
+    closeTaskForm();
+    selectProject(currentProject, document.getElementById('tasks-title').dataset.project);
 }
 
 async function markDone(id) {
@@ -166,6 +179,9 @@ async function openTask(id) {
     document.getElementById('detail-name').textContent = data.name;
     document.getElementById('detail-desc').textContent = data.description || 'No description';
     document.getElementById('detail-deadline').textContent = data.deadline || 'N/A';
+    document.getElementById('detail-time').textContent = formatTime(data.time_spent);
+    const btn = document.getElementById('start-stop-btn');
+    btn.textContent = data.started ? 'Stop' : 'Start';
     const modal = document.getElementById('task-modal');
     modal.style.display = 'flex';
 }
@@ -173,6 +189,27 @@ async function openTask(id) {
 function closeTask() {
     document.getElementById('task-modal').style.display = 'none';
     currentTask = null;
+}
+
+function formatTime(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return `${h}h ${m}m`;
+}
+
+async function toggleTimer() {
+    if (!currentTask) return;
+    const btn = document.getElementById('start-stop-btn');
+    if (btn.textContent === 'Start') {
+        await fetch(`/api/tasks/${currentTask}/start`, { method: 'POST' });
+        btn.textContent = 'Stop';
+    } else {
+        const res = await fetch(`/api/tasks/${currentTask}/stop`, { method: 'POST' });
+        const data = await res.json();
+        document.getElementById('detail-time').textContent = formatTime(data.time_spent);
+        btn.textContent = 'Start';
+    }
+    if (currentProject) selectProject(currentProject, document.getElementById('tasks-title').dataset.project);
 }
 
 async function loadNotifications() {
@@ -214,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('plan-date').value = today;
     loadPlan(today);
     document.getElementById('plan-date').onchange = (e) => loadPlan(e.target.value);
-    document.getElementById('recommend-btn').onclick = recommendTask;
+    document.getElementById('new-task-btn').onclick = openTaskForm;
     document.getElementById('send-btn').onclick = sendMessage;
     document.getElementById('message').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
@@ -238,11 +275,24 @@ async function loadPlan(date) {
     });
 }
 
-async function recommendTask() {
+async function fetchRecommendation() {
     const res = await fetch('/api/recommendations');
     const recs = await res.json();
-    const div = document.getElementById('recommendation');
-    div.textContent = recs.length ? recs[0] : 'No suggestions';
+    return recs.length ? recs[0] : 'No suggestions';
+}
+
+async function loadDashboard() {
+    const rec = await fetchRecommendation();
+    const res = await fetch('/api/projects');
+    const projs = await res.json();
+    let total = 0, done = 0;
+    projs.forEach(p => {
+        p.tasks.forEach(t => { total++; if (t.status === 'done') done++; });
+    });
+    const summary = document.getElementById('summary');
+    const percent = total ? Math.round(done / total * 100) : 0;
+    summary.textContent = `${projs.length} projects, ${total} tasks (${percent}% done)`;
+    document.getElementById('recommended').textContent = `Recommended: ${rec}`;
 }
 
 

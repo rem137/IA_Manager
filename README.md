@@ -25,9 +25,10 @@ python -m ia_manager.web.server
 
 The interface lists projects and their tasks and includes a chat area.
 Projects can be renamed or deleted directly in the list.
-Click a task to view its details, mark it as done or delete it. A deadline can be entered when creating a task.
+Click a task to open a detail modal where you can start/stop the timer or mark it done.
+New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 Use the **Planning** panel to pick a day and see tasks due that day.
-Press **What now?** to get an immediate recommendation from the planner.
+The dashboard now displays the recommended next task automatically as well as overall progress.
 Navigate using the left menu to switch between the dashboard, project view,
 global tasks list, chat and settings.

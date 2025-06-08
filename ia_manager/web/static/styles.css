@@ -157,13 +157,19 @@ li.done {
     display: flex;
 }
 
-.form input {
+.form input,
+.form textarea {
     flex: 1;
     background: #222;
     border: 1px solid #333;
     color: var(--text-color);
     padding: 6px;
     margin-right: 5px;
+}
+
+.form textarea {
+    height: 60px;
+    resize: vertical;
 }
 
 .form input[type="date"] {
@@ -230,6 +236,8 @@ button.wide {
     padding: 20px;
     border: 1px solid var(--accent);
     width: 300px;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-content .buttons {
@@ -237,8 +245,18 @@ button.wide {
     text-align: right;
 }
 
+.modal-content input,
+.modal-content textarea {
+    margin-bottom: 8px;
+}
+
 .notifications {
     margin-top: 20px;
+}
+
+#recommended {
+    margin-top: 10px;
+    font-weight: bold;
 }
 
 .notification {
@@ -251,10 +269,6 @@ button.wide {
     align-items: center;
 }
 
-#recommendation {
-    margin-top: 10px;
-    font-weight: bold;
-}
 
 @media (max-width: 900px) {
     #sidebar {

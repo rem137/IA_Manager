@@ -115,12 +115,54 @@ def update_task(tid):
                 return jsonify(t.to_dict())
     return jsonify({'error': 'not found'}), 404
 
+
+@app.route('/api/tasks/<int:tid>/start', methods=['POST'])
+def start_task(tid):
+    projects = storage.load_projects()
+    now = datetime.utcnow().isoformat()
+    for p in projects:
+        for t in p.tasks:
+            if t.id == tid:
+                if not t.started:
+                    t.started = now
+                    storage.save_projects(projects)
+                    logger.log(f"Web: started task {tid}")
+                return jsonify({'status': 'started'})
+    return jsonify({'error': 'not found'}), 404
+
+
+@app.route('/api/tasks/<int:tid>/stop', methods=['POST'])
+def stop_task(tid):
+    projects = storage.load_projects()
+    now = datetime.utcnow()
+    for p in projects:
+        for t in p.tasks:
+            if t.id == tid:
+                if t.started:
+                    try:
+                        st = datetime.fromisoformat(t.started)
+                        t.time_spent += int((now - st).total_seconds())
+                    except ValueError:
+                        pass
+                    t.started = None
+                    storage.save_projects(projects)
+                    logger.log(f"Web: stopped task {tid}")
+                return jsonify({'time_spent': t.time_spent})
+    return jsonify({'error': 'not found'}), 404
+
 @app.route('/api/tasks/<int:tid>/done', methods=['POST'])
 def mark_task_done(tid):
     projects = storage.load_projects()
     for p in projects:
         for t in p.tasks:
             if t.id == tid:
+                if t.started:
+                    try:
+                        st = datetime.fromisoformat(t.started)
+                        t.time_spent += int((datetime.utcnow() - st).total_seconds())
+                    except ValueError:
+                        pass
+                    t.started = None
                 t.status = 'done'
                 storage.save_projects(projects)
                 logger.log(f"Web: done task {tid}")

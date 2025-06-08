@@ -24,6 +24,7 @@
             <h2>Welcome</h2>
             <p>This dashboard summarizes your projects and tasks.</p>
             <div id="summary"></div>
+            <p id="recommended"></p>
         </section>
         <section id="projects-view" class="view">
             <div id="project-list-section">
@@ -37,13 +38,7 @@
             <div id="task-section">
                 <h2 id="tasks-title" data-project="">Tasks</h2>
                 <ul id="task-list"></ul>
-                <div class="form">
-                    <input id="new-task-name" placeholder="Enter new task..." />
-                    <input id="new-task-deadline" type="date" />
-                    <button onclick="createTask()">Add</button>
-                </div>
-                <button id="recommend-btn" class="wide">What now?</button>
-                <div id="recommendation"></div>
+                <button id="new-task-btn" class="wide">New Task</button>
             </div>
         </section>
         <section id="tasks-view" class="view">
@@ -76,9 +71,23 @@
         <h3 id="detail-name"></h3>
         <p id="detail-desc"></p>
         <p>Deadline: <span id="detail-deadline"></span></p>
+        <p>Time spent: <span id="detail-time"></span></p>
         <div class="buttons">
+            <button id="start-stop-btn" onclick="toggleTimer()">Start</button>
             <button onclick="markDone(currentTask)">Done</button>
             <button onclick="closeTask()">Close</button>
+        </div>
+    </div>
+</div>
+<div id="task-form" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>New Task</h3>
+        <input id="task-name-input" placeholder="Task name">
+        <textarea id="task-desc-input" placeholder="Description"></textarea>
+        <input id="task-deadline-input" type="date">
+        <div class="buttons">
+            <button onclick="submitTask()">Create</button>
+            <button onclick="closeTaskForm()">Cancel</button>
         </div>
     </div>
 </div>
