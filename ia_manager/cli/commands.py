@@ -3,6 +3,8 @@ from typing import List, Optional
 from ..models.project import Project
 from ..models.task import Task
 from ..services import storage, logger, planner
+import calendar
+from datetime import datetime, date
 
 
 def _find_project(projects: List[Project], project_id: int) -> Optional[Project]:
@@ -139,6 +141,38 @@ def plan(_args):
         print(f"- {s}")
 
 
+def show_calendar(_args):
+    projects = storage.load_projects()
+    today = date.today()
+    tasks_by_day = {}
+    for proj in projects:
+        for task in proj.tasks:
+            if task.deadline:
+                try:
+                    d = datetime.fromisoformat(task.deadline)
+                except ValueError:
+                    continue
+                if d.year == today.year and d.month == today.month:
+                    tasks_by_day.setdefault(d.day, []).append(f"{proj.name}: {task.name}")
+    cal = calendar.Calendar().monthdayscalendar(today.year, today.month)
+    print(f"{calendar.month_name[today.month]} {today.year}")
+    print("Mo Tu We Th Fr Sa Su")
+    for week in cal:
+        line = []
+        for day in week:
+            if day == 0:
+                line.append("  ")
+            else:
+                mark = "*" if day in tasks_by_day else " "
+                line.append(f"{day:2d}{mark}")
+        print(" ".join(line))
+    if tasks_by_day:
+        print("\nLegend: * task due")
+        for day in sorted(tasks_by_day):
+            for t in tasks_by_day[day]:
+                print(f"{day:02d}: {t}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ia_manager")
     sub = parser.add_subparsers(dest="command")
@@ -197,5 +231,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     plan_cmd = sub.add_parser("plan")
     plan_cmd.set_defaults(func=plan)
+
+    cal_cmd = sub.add_parser("calendar")
+    cal_cmd.set_defaults(func=show_calendar)
 
     return parser
