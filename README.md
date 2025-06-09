@@ -14,9 +14,12 @@ generating documentation.
 ## Web interface
 
 A Flask-based web UI is available for managing projects and tasks. The
-interface uses a dark futuristic theme with red accents and features a left
-navigation bar, a dynamic central area and a context panel with the daily
-planning.
+interface uses a dark futuristic theme with red accents. It is organised in
+three columns:
+
+* a menu sidebar on the left
+* a central area displaying the task currently recommended by the AI
+* a right column listing upcoming deadlines and notifications
 Run it with:
 
 ```
@@ -28,7 +31,6 @@ Projects can be renamed or deleted directly in the list.
 Click a task to open a detail modal where you can start/stop the timer or mark it done.
 New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
-Use the **Planning** panel to pick a day and see tasks due that day.
-The dashboard now displays the recommended next task automatically as well as overall progress.
+The right column lists upcoming deadlines while the centre shows the task the AI recommends to start now.
 Navigate using the left menu to switch between the dashboard, project view,
 global tasks list, chat and settings.

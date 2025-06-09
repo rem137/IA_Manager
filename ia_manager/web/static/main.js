@@ -247,30 +247,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#sidebar a').forEach(a => {
         a.onclick = (e) => { e.preventDefault(); showView(a.dataset.view); };
     });
-    const today = new Date().toISOString().slice(0,10);
-    document.getElementById('plan-date').value = today;
-    loadPlan(today);
-    document.getElementById('plan-date').onchange = (e) => loadPlan(e.target.value);
+    loadDeadlines();
     document.getElementById('new-task-btn').onclick = openTaskForm;
     document.getElementById('send-btn').onclick = sendMessage;
     document.getElementById('message').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
     });
     setInterval(loadNotifications, 5000);
+    setInterval(loadDeadlines, 60000);
     feather.replace();
+    document.getElementById('accept-proposal').onclick = () => alert('Tâche acceptée');
+    document.getElementById('decline-proposal').onclick = loadDashboard;
     showView('dashboard-view');
 });
 
-async function loadPlan(date) {
-    const res = await fetch(`/api/calendar/${date}`);
+
+async function loadDeadlines() {
+    const res = await fetch('/api/deadlines');
     const tasks = await res.json();
-    const list = document.getElementById('plan-list');
-    document.getElementById('plan-title').textContent = `Schedule for ${date}`;
+    const list = document.getElementById('deadline-list');
     list.innerHTML = '';
     tasks.forEach(t => {
         const li = document.createElement('li');
-        li.textContent = t.time ? `${t.time} - ${t.project}: ${t.task}`
-                               : `${t.project}: ${t.task}`;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.onchange = () => markDone(t.id);
+        const span = document.createElement('span');
+        span.textContent = `${t.task} - ${t.project}`;
+        li.appendChild(checkbox);
+        li.appendChild(span);
         list.appendChild(li);
     });
 }
@@ -283,16 +288,7 @@ async function fetchRecommendation() {
 
 async function loadDashboard() {
     const rec = await fetchRecommendation();
-    const res = await fetch('/api/projects');
-    const projs = await res.json();
-    let total = 0, done = 0;
-    projs.forEach(p => {
-        p.tasks.forEach(t => { total++; if (t.status === 'done') done++; });
-    });
-    const summary = document.getElementById('summary');
-    const percent = total ? Math.round(done / total * 100) : 0;
-    summary.textContent = `${projs.length} projects, ${total} tasks (${percent}% done)`;
-    document.getElementById('recommended').textContent = `Recommended: ${rec}`;
+    document.getElementById('proposal-text').textContent = rec;
 }
 
 

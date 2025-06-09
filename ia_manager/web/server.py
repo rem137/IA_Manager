@@ -215,6 +215,26 @@ def calendar_day(date_str: str):
     return jsonify(tasks)
 
 
+@app.route('/api/deadlines')
+def upcoming_deadlines():
+    """Return tasks due in the next 7 days."""
+    now = datetime.utcnow()
+    projs = storage.load_projects()
+    upcoming = []
+    for p in projs:
+        for t in p.tasks:
+            if t.status == 'done' or not t.deadline:
+                continue
+            try:
+                d = datetime.fromisoformat(t.deadline)
+            except ValueError:
+                continue
+            if 0 <= (d - now).days <= 7:
+                upcoming.append({'id': t.id, 'project': p.name, 'task': t.name, 'deadline': d.isoformat()})
+    upcoming.sort(key=lambda x: x['deadline'])
+    return jsonify(upcoming)
+
+
 @app.route('/api/notifications', methods=['GET', 'POST'])
 def notifications_api():
     if request.method == 'POST':

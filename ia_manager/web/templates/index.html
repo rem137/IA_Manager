@@ -21,10 +21,14 @@
     </nav>
     <div id="content">
         <section id="dashboard-view" class="view active">
-            <h2>Welcome</h2>
-            <p>This dashboard summarizes your projects and tasks.</p>
-            <div id="summary"></div>
-            <p id="recommended"></p>
+            <div id="proposal" class="card">
+                <h2>Tâche proposée</h2>
+                <p id="proposal-text">En attente...</p>
+                <div class="buttons">
+                    <button id="accept-proposal">Accepter</button>
+                    <button id="decline-proposal">Refuser</button>
+                </div>
+            </div>
         </section>
         <section id="projects-view" class="view">
             <div id="project-list-section">
@@ -58,10 +62,9 @@
         </section>
     </div>
     <aside id="context">
-        <div id="planning">
-            <h2 id="plan-title">Schedule</h2>
-            <input type="date" id="plan-date">
-            <ul id="plan-list"></ul>
+        <div id="deadlines">
+            <h2>Deadlines proches</h2>
+            <ul id="deadline-list"></ul>
         </div>
         <div id="notifications" class="notifications"></div>
     </aside>

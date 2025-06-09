@@ -39,7 +39,8 @@ header .logo {
 }
 
 #sidebar {
-    width: 200px;
+    flex: 0 0 20%;
+    min-width: 160px;
     background: var(--panel-bg);
     border-right: 1px solid #222;
     display: flex;
@@ -53,6 +54,8 @@ header .logo {
     text-decoration: none;
     color: var(--text-color);
     transition: background 0.2s;
+    margin-bottom: 6px;
+    border-radius: 4px;
 }
 
 #sidebar a:hover,
@@ -65,7 +68,7 @@ header .logo {
 }
 
 #content {
-    flex: 1;
+    flex: 0 0 60%;
     display: flex;
     position: relative;
 }
@@ -102,7 +105,8 @@ header .logo {
 }
 
 #context {
-    width: 260px;
+    flex: 0 0 20%;
+    min-width: 180px;
     background: var(--panel-bg);
     padding: 15px;
     box-sizing: border-box;
@@ -110,10 +114,25 @@ header .logo {
     overflow-y: auto;
 }
 
+#deadlines ul {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
 h2 {
     margin-top: 0;
     border-bottom: 1px solid var(--accent);
     padding-bottom: 5px;
+}
+
+.card {
+    background: var(--panel-bg);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 ul {
@@ -245,6 +264,11 @@ button.wide {
     text-align: right;
 }
 
+.card .buttons {
+    margin-top: 15px;
+    text-align: center;
+}
+
 .modal-content input,
 .modal-content textarea {
     margin-bottom: 8px;
@@ -272,10 +296,16 @@ button.wide {
 
 @media (max-width: 900px) {
     #sidebar {
-        width: 60px;
+        flex-basis: 60px;
     }
 
     #sidebar span:not(.icon) {
+        display: none;
+    }
+    #content {
+        flex-basis: auto;
+    }
+    #context {
         display: none;
     }
 }
