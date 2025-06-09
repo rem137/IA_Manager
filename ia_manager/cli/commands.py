@@ -352,6 +352,12 @@ def show_calendar(_args):
                 print(f"{day:02d}: {t}")
 
 
+def assistant_chat(_args):
+    """Start interactive chat with the OpenAI assistant."""
+    from ..assistant import chat_loop
+    chat_loop()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ia_manager")
     sub = parser.add_subparsers(dest="command")
@@ -449,6 +455,8 @@ def build_parser() -> argparse.ArgumentParser:
     imp_add.set_defaults(func=add_improvement)
 
     sub.add_parser("plan_self_update").set_defaults(func=plan_self_update)
+
+    sub.add_parser("assistant").set_defaults(func=assistant_chat)
 
     sub.add_parser("calendar").set_defaults(func=show_calendar)
 

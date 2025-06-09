@@ -18,6 +18,23 @@ Use the `schedule_task` command or update a task with `update_task` to set these
 fields. The `list_schedule` command prints the current planning ordered by
 start time.
 
+## OpenAI assistant
+
+If the environment variable `Assistant_Token` is set with an OpenAI API key,
+you can chat with an assistant that controls the CLI. Run:
+
+```
+python -m ia_manager assistant
+```
+
+The assistant will decide which CLI function to call to manage your projects and
+tasks.
+Install the `openai` package to enable this feature:
+
+```
+pip install openai
+```
+
 ## Web interface
 
 A Flask-based web UI is available for managing projects and tasks. The
