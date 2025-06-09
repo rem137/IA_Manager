@@ -18,18 +18,18 @@ Use the `schedule_task` command or update a task with `update_task` to set these
 fields. The `list_schedule` command prints the current planning ordered by
 start time.
 
-## OpenAI assistant
+## OpenAI assistant (beta)
 
 If the environment variable `Assistant_Token` is set with an OpenAI API key,
-you can chat with an assistant that controls the CLI. Run:
+you can chat with the beta Assistant API to control the CLI. Run:
 
 ```
 python -m ia_manager assistant
 ```
 
-The assistant will decide which CLI function to call to manage your projects and
-tasks.
-Install the `openai` package to enable this feature:
+The assistant decides which CLI function to call in order to manage your
+projects and tasks.
+Install the latest `openai` package to enable this feature:
 
 ```
 pip install openai

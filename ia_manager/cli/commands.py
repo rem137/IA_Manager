@@ -353,7 +353,7 @@ def show_calendar(_args):
 
 
 def assistant_chat(_args):
-    """Start interactive chat with the OpenAI assistant."""
+    """Start interactive chat with the OpenAI Assistant API."""
     from ..assistant import chat_loop
     chat_loop()
 

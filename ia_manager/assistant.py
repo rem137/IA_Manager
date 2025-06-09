@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import openai
 from types import SimpleNamespace
 from contextlib import redirect_stdout
@@ -125,6 +126,9 @@ FUNCTIONS = [
     },
 ]
 
+# Tools format for the assistant API
+TOOLS = [{"type": "function", "function": f} for f in FUNCTIONS]
+
 FUNC_MAP = {
     "create_project": commands.add_project,
     "list_projects": commands.list_projects,
@@ -155,7 +159,14 @@ def chat_loop() -> None:
         print("Assistant_Token environment variable not set")
         return
     client = openai.OpenAI(api_key=token)
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    assistant = client.beta.assistants.create(
+        name="IA Manager",
+        instructions=SYSTEM_PROMPT,
+        tools=TOOLS,
+        model="gpt-4-turbo",
+    )
+    thread = client.beta.threads.create()
+
     print("Type 'quit' to exit")
     while True:
         user = input("you> ").strip()
@@ -163,26 +174,43 @@ def chat_loop() -> None:
             continue
         if user.lower() in {"quit", "exit"}:
             break
-        messages.append({"role": "user", "content": user})
+
+        client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=user,
+        )
+
+        run = client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+        )
+
         while True:
-            resp = client.chat.completions.create(
-                model="gpt-3.5-turbo-0125",
-                messages=messages,
-                functions=FUNCTIONS,
-                function_call="auto",
-            )
-            msg = resp.choices[0].message.model_dump()
-            if msg.get("function_call"):
-                name = msg["function_call"]["name"]
-                try:
-                    args = json.loads(msg["function_call"]["arguments"])
-                except json.JSONDecodeError:
-                    args = {}
-                result = _execute(name, args)
-                messages.append(msg)
-                messages.append({"role": "function", "name": name, "content": result})
-                continue
+            run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+            if run.status == "completed":
+                break
+            if run.status == "requires_action":
+                calls = run.required_action["submit_tool_outputs"]["tool_calls"]
+                outputs = []
+                for call in calls:
+                    name = call["function"]["name"]
+                    try:
+                        args = json.loads(call["function"]["arguments"])
+                    except json.JSONDecodeError:
+                        args = {}
+                    result = _execute(name, args)
+                    outputs.append({"tool_call_id": call["id"], "output": result})
+                run = client.beta.threads.runs.submit_tool_outputs(
+                    thread_id=thread.id,
+                    run_id=run.id,
+                    tool_outputs=outputs,
+                )
             else:
-                print(f"assistant> {msg.get('content', '')}")
-                messages.append(msg)
+                time.sleep(1)
+
+        messages = client.beta.threads.messages.list(thread_id=thread.id, order="desc")
+        for msg in messages.data:
+            if msg.role == "assistant":
+                print(f"assistant> {msg.content[0].text.value}")
                 break
