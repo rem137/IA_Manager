@@ -293,6 +293,27 @@ button.wide {
     align-items: center;
 }
 
+.calendar {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.calendar th,
+.calendar td {
+    border: 1px solid #333;
+    padding: 6px;
+    vertical-align: top;
+}
+
+.calendar th {
+    background: #1a1a1a;
+}
+
+.cal-item {
+    margin-bottom: 4px;
+}
+
 
 @media (max-width: 900px) {
     #sidebar {

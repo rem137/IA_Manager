@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, render_template
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..services import storage, planner, logger
 from ..models.project import Project
 from ..models.task import Task
@@ -213,6 +213,41 @@ def calendar_day(date_str: str):
                     'time': d.strftime('%H:%M') if d.time().hour or d.time().minute else None
                 })
     return jsonify(tasks)
+
+
+@app.route('/api/calendar/week')
+def calendar_week():
+    """Return tasks scheduled in a 7-day window starting from the given date.
+    Query param `start` expects YYYY-MM-DD and defaults to current week Monday.
+    """
+    start_str = request.args.get('start')
+    if start_str:
+        try:
+            start = datetime.fromisoformat(start_str).date()
+        except ValueError:
+            return jsonify({'error': 'bad date'}), 400
+    else:
+        today = datetime.utcnow().date()
+        start = today - timedelta(days=today.weekday())
+
+    days = { (start + timedelta(days=i)).isoformat(): [] for i in range(7) }
+    projs = storage.load_projects()
+    for p in projs:
+        for t in p.tasks:
+            if not t.deadline:
+                continue
+            try:
+                d = datetime.fromisoformat(t.deadline)
+            except ValueError:
+                continue
+            date_key = d.date().isoformat()
+            if date_key in days:
+                days[date_key].append({
+                    'project': p.name,
+                    'task': t.name,
+                    'time': d.strftime('%H:%M') if d.time().hour or d.time().minute else None
+                })
+    return jsonify(days)
 
 
 @app.route('/api/deadlines')

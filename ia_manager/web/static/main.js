@@ -10,6 +10,7 @@ function showView(id) {
     });
     if (id === 'tasks-view') loadAllTasks();
     if (id === 'dashboard-view') loadDashboard();
+    if (id === 'calendar-view') loadCalendar();
 }
 
 async function loadAllTasks() {
@@ -302,4 +303,41 @@ function sendMessage() {
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
     input.value = '';
+}
+
+async function loadCalendar() {
+    const table = document.getElementById('calendar-table');
+    if (!table) return;
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - now.getDay() + 1);
+    const startStr = monday.toISOString().slice(0, 10);
+    const res = await fetch(`/api/calendar/week?start=${startStr}`);
+    const data = await res.json();
+    table.innerHTML = '';
+    const headerRow = document.createElement('tr');
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const th = document.createElement('th');
+        th.textContent = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        headerRow.appendChild(th);
+        days.push(d.toISOString().slice(0, 10));
+    }
+    table.appendChild(headerRow);
+    const row = document.createElement('tr');
+    days.forEach(ds => {
+        const td = document.createElement('td');
+        const items = data[ds] || [];
+        items.sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+        items.forEach(it => {
+            const div = document.createElement('div');
+            div.className = 'cal-item';
+            div.textContent = (it.time ? it.time + ' - ' : '') + `${it.task} (${it.project})`;
+            td.appendChild(div);
+        });
+        row.appendChild(td);
+    });
+    table.appendChild(row);
 }
