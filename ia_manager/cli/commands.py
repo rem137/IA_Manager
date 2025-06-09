@@ -173,6 +173,12 @@ def update_task(args):
         task.importance = args.importance
     if args.desc is not None:
         task.description = args.desc
+    if args.planned_start is not None:
+        task.planned_start = args.planned_start
+    if args.planned_end is not None:
+        task.planned_end = args.planned_end
+    if args.planned_hours is not None:
+        task.planned_hours = args.planned_hours
     storage.save_projects(projects)
     logger.log(f"Updated task {task.id} in project {project.name}")
     print("Task updated")
@@ -202,6 +208,41 @@ def mark_done(args):
                 print("Task marked as done")
                 return
     print("Task not found")
+
+
+def schedule_task(args):
+    """Plan start/end dates or duration for a task."""
+    projects = storage.load_projects()
+    for p in projects:
+        for t in p.tasks:
+            if t.id == args.task_id:
+                if args.start:
+                    t.planned_start = args.start
+                if args.end:
+                    t.planned_end = args.end
+                if args.hours is not None:
+                    t.planned_hours = args.hours
+                if args.start or args.end or args.hours is not None:
+                    t.status = 'planned'
+                storage.save_projects(projects)
+                logger.log(f"Scheduled task {t.id}")
+                print("Task scheduled")
+                return
+    print("Task not found")
+
+
+def list_schedule(_args):
+    projects = storage.load_projects()
+    entries = []
+    for p in projects:
+        for t in p.tasks:
+            if t.planned_start:
+                entries.append((t.planned_start, p.name, t))
+    entries.sort(key=lambda x: x[0])
+    for start, pname, t in entries:
+        end = f" -> {t.planned_end}" if t.planned_end else ""
+        dur = f" ({t.planned_hours}h)" if t.planned_hours else ""
+        print(f"{start}{end} {pname}: {t.name}{dur}")
 
 
 def show_status(_args):
@@ -371,7 +412,19 @@ def build_parser() -> argparse.ArgumentParser:
     t_upd.add_argument("--estimated", type=int)
     t_upd.add_argument("--importance", type=int)
     t_upd.add_argument("--status")
+    t_upd.add_argument("--planned_start")
+    t_upd.add_argument("--planned_end")
+    t_upd.add_argument("--planned_hours", type=float)
     t_upd.set_defaults(func=update_task)
+
+    t_sched = sub.add_parser("schedule_task")
+    t_sched.add_argument("task_id", type=int)
+    t_sched.add_argument("--start")
+    t_sched.add_argument("--end")
+    t_sched.add_argument("--hours", type=float)
+    t_sched.set_defaults(func=schedule_task)
+
+    sub.add_parser("list_schedule").set_defaults(func=list_schedule)
 
     sub.add_parser("show_status").set_defaults(func=show_status)
 

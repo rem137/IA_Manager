@@ -11,6 +11,13 @@ the shell to see available commands. The main commands include creating and
 listing projects, managing tasks, showing the status, planning a day and
 generating documentation.
 
+## Task scheduling
+
+Tasks now support planned start and end times as well as an optional duration.
+Use the `schedule_task` command or update a task with `update_task` to set these
+fields. The `list_schedule` command prints the current planning ordered by
+start time.
+
 ## Web interface
 
 A Flask-based web UI is available for managing projects and tasks. The

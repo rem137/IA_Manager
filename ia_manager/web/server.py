@@ -81,7 +81,10 @@ def add_task(pid):
         estimated=data.get('estimated'),
         deadline=data.get('deadline'),
         importance=data.get('importance', 3),
-        description=data.get('description', '')
+        description=data.get('description', ''),
+        planned_start=data.get('planned_start'),
+        planned_end=data.get('planned_end'),
+        planned_hours=data.get('planned_hours'),
     )
     proj.tasks.append(task)
     storage.save_projects(projects)
@@ -110,6 +113,9 @@ def update_task(tid):
                 t.deadline = data.get('deadline', t.deadline)
                 t.importance = data.get('importance', t.importance)
                 t.description = data.get('description', t.description)
+                t.planned_start = data.get('planned_start', t.planned_start)
+                t.planned_end = data.get('planned_end', t.planned_end)
+                t.planned_hours = data.get('planned_hours', t.planned_hours)
                 storage.save_projects(projects)
                 logger.log(f"Web: updated task {tid}")
                 return jsonify(t.to_dict())
@@ -200,10 +206,11 @@ def calendar_day(date_str: str):
     tasks = []
     for p in projs:
         for t in p.tasks:
-            if not t.deadline:
+            date_str = t.planned_start or t.deadline
+            if not date_str:
                 continue
             try:
-                d = datetime.fromisoformat(t.deadline)
+                d = datetime.fromisoformat(date_str)
             except ValueError:
                 continue
             if d.date() == day:
@@ -234,10 +241,11 @@ def calendar_week():
     projs = storage.load_projects()
     for p in projs:
         for t in p.tasks:
-            if not t.deadline:
+            date_str = t.planned_start or t.deadline
+            if not date_str:
                 continue
             try:
-                d = datetime.fromisoformat(t.deadline)
+                d = datetime.fromisoformat(date_str)
             except ValueError:
                 continue
             date_key = d.date().isoformat()
@@ -258,10 +266,11 @@ def upcoming_deadlines():
     upcoming = []
     for p in projs:
         for t in p.tasks:
-            if t.status == 'done' or not t.deadline:
+            date_str = t.planned_start or t.deadline
+            if t.status == 'done' or not date_str:
                 continue
             try:
-                d = datetime.fromisoformat(t.deadline)
+                d = datetime.fromisoformat(date_str)
             except ValueError:
                 continue
             if 0 <= (d - now).days <= 7:

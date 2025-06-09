@@ -19,7 +19,10 @@ COMMAND_HELP = """Available commands:
   list_tasks PROJECT [--all|--done]
   mark_done TASK_ID
   delete_task TASK_ID
-  update_task TASK_ID [--title NAME --due JJ/MM --desc TEXT]
+  update_task TASK_ID [--title NAME --due JJ/MM --desc TEXT \
+                       --planned_start TS --planned_end TS --planned_hours H]
+  schedule_task TASK_ID [--start TS --end TS --hours H]
+  list_schedule
   show_status
   plan_day [JJ/MM]
   recommend_task

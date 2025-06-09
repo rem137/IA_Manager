@@ -148,15 +148,21 @@ async function submitTask() {
     const name = document.getElementById('task-name-input').value.trim();
     const desc = document.getElementById('task-desc-input').value.trim();
     const deadline = document.getElementById('task-deadline-input').value || null;
+    const start = document.getElementById('task-start-input').value || null;
+    const end = document.getElementById('task-end-input').value || null;
+    const hours = parseFloat(document.getElementById('task-hours-input').value) || null;
     if (!name) return;
     await fetch(`/api/projects/${currentProject}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description: desc, deadline })
+        body: JSON.stringify({ name, description: desc, deadline, planned_start: start, planned_end: end, planned_hours: hours })
     });
     document.getElementById('task-name-input').value = '';
     document.getElementById('task-desc-input').value = '';
     document.getElementById('task-deadline-input').value = '';
+    document.getElementById('task-start-input').value = '';
+    document.getElementById('task-end-input').value = '';
+    document.getElementById('task-hours-input').value = '';
     closeTaskForm();
     selectProject(currentProject, document.getElementById('tasks-title').dataset.project);
 }
@@ -180,6 +186,13 @@ async function openTask(id) {
     document.getElementById('detail-name').textContent = data.name;
     document.getElementById('detail-desc').textContent = data.description || 'No description';
     document.getElementById('detail-deadline').textContent = data.deadline || 'N/A';
+    const plan = document.getElementById('detail-plan');
+    if (plan) {
+        const start = data.planned_start ? `Start: ${data.planned_start}` : '';
+        const end = data.planned_end ? ` End: ${data.planned_end}` : '';
+        const hours = data.planned_hours ? ` (${data.planned_hours}h)` : '';
+        plan.textContent = start || end || hours ? `${start}${end}${hours}` : 'No plan';
+    }
     document.getElementById('detail-time').textContent = formatTime(data.time_spent);
     const btn = document.getElementById('start-stop-btn');
     btn.textContent = data.started ? 'Stop' : 'Start';
