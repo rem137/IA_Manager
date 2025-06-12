@@ -239,6 +239,17 @@ button.wide {
     cursor: pointer;
 }
 
+.user-msg {
+    text-align: right;
+    margin: 2px 0;
+}
+
+.bot-msg {
+    text-align: left;
+    margin: 2px 0;
+    color: var(--accent);
+}
+
 .modal {
     position: fixed;
     top: 0;

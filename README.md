@@ -11,10 +11,45 @@ the shell to see available commands. The main commands include creating and
 listing projects, managing tasks, showing the status, planning a day and
 generating documentation.
 
+## Task scheduling
+
+Tasks now support planned start and end times as well as an optional duration.
+Use the `schedule_task` command or update a task with `update_task` to set these
+fields. The `list_schedule` command prints the current planning ordered by
+start time.
+
+## OpenAI assistant (beta)
+
+Set an OpenAI API key in the `OPENAI_API_KEY` environment variable to enable the
+assistant. The old `Assistant_Token` variable is still accepted as a fallback
+for the API key or to provide a pre‑existing assistant ID (values beginning with
+`asst_`). If no ID is supplied via `OPENAI_ASSISTANT_ID`, a new assistant is
+created automatically. Run:
+
+```
+python -m ia_manager assistant
+```
+
+The assistant decides which CLI function to call in order to manage your
+projects and tasks. Install the latest `openai` package to enable this feature.
+`OPENAI_API_KEY` **must** contain a valid API key. `Assistant_Token` can be used
+instead for backward compatibility or to specify the assistant ID. Example
+installation:
+
+```
+pip install openai
+```
+
 ## Web interface
 
-A Flask-based web UI is available for managing projects and tasks. The
-interface uses a dark futuristic theme with red accents. It is organised in
+A Flask-based web UI is available for managing projects and tasks. Make sure the
+`flask` package is installed:
+
+```
+pip install flask
+```
+
+The interface uses a dark futuristic theme with red accents. It is organised in
 three columns:
 
 * a menu sidebar on the left
@@ -27,6 +62,8 @@ python -m ia_manager.web.server
 ```
 
 The interface lists projects and their tasks and includes a chat area.
+Messages typed in this chat are sent to the OpenAI assistant via the
+`/api/chat` endpoint.
 Projects can be renamed or deleted directly in the list.
 Click a task to open a detail modal where you can start/stop the timer or mark it done.
 New tasks are added through a dedicated form with name, description and deadline fields.

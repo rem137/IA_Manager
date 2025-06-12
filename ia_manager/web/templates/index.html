@@ -79,6 +79,7 @@
         <h3 id="detail-name"></h3>
         <p id="detail-desc"></p>
         <p>Deadline: <span id="detail-deadline"></span></p>
+        <p><span id="detail-plan"></span></p>
         <p>Time spent: <span id="detail-time"></span></p>
         <div class="buttons">
             <button id="start-stop-btn" onclick="toggleTimer()">Start</button>
@@ -93,6 +94,9 @@
         <input id="task-name-input" placeholder="Task name">
         <textarea id="task-desc-input" placeholder="Description"></textarea>
         <input id="task-deadline-input" type="date">
+        <input id="task-start-input" type="datetime-local" placeholder="Start">
+        <input id="task-end-input" type="datetime-local" placeholder="End">
+        <input id="task-hours-input" type="number" step="0.1" placeholder="Planned hours">
         <div class="buttons">
             <button onclick="submitTask()">Create</button>
             <button onclick="closeTaskForm()">Cancel</button>
