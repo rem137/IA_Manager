@@ -22,7 +22,9 @@ start time.
 
 If an OpenAI API key is available via the `OPENAI_API_KEY` environment variable
 (or `Assistant_Token` for backward compatibility), you can chat with the beta
-Assistant API to control the CLI. Run:
+Assistant API to control the CLI. `Assistant_Token` can also hold a published
+assistant ID (value starting with `asst_`). In that case the existing assistant
+is used instead of creating one. Run:
 
 ```
 python -m ia_manager assistant
@@ -31,7 +33,8 @@ python -m ia_manager assistant
 The assistant decides which CLI function to call in order to manage your
 projects and tasks. Install the latest `openai` package to enable this feature.
 Set your API key in `OPENAI_API_KEY`. If that variable is not available,
-`Assistant_Token` is also recognized as a fallback:
+`Assistant_Token` may contain either an API key or an assistant ID and will be
+used as a fallback:
 
 ```
 pip install openai

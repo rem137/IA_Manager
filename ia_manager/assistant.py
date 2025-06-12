@@ -154,21 +154,36 @@ def _execute(func_name: str, params: dict) -> str:
 
 
 def chat_loop() -> None:
-    token = os.getenv("OPENAI_API_KEY") or os.getenv("Assistant_Token")
-    if not token:
-        print("Set OPENAI_API_KEY or Assistant_Token environment variable")
-        return
-    try:
+    """Chat with the Assistant API using an existing assistant if provided."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    token = os.getenv("Assistant_Token")
+
+    if api_key:
+        client = openai.OpenAI(api_key=api_key)
+    elif token and not token.startswith("asst_"):
         client = openai.OpenAI(api_key=token)
-        assistant = client.beta.assistants.create(
-            name="IA Manager",
-            instructions=SYSTEM_PROMPT,
-            tools=TOOLS,
-            model="gpt-4-turbo",
-        )
+    else:
+        print("Set OPENAI_API_KEY or a valid Assistant_Token")
+        return
+
+    assistant_id = None
+    if token and token.startswith("asst_"):
+        assistant_id = token
+    else:
+        assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
+
+    try:
+        if not assistant_id:
+            assistant = client.beta.assistants.create(
+                name="IA Manager",
+                instructions=SYSTEM_PROMPT,
+                tools=TOOLS,
+                model="gpt-4-turbo",
+            )
+            assistant_id = assistant.id
         thread = client.beta.threads.create()
     except openai.AuthenticationError:
-        print("Invalid API key. Check Assistant_Token or OPENAI_API_KEY.")
+        print("Invalid credentials. Check OPENAI_API_KEY/Assistant_Token.")
         return
     except Exception as exc:
         print(f"Failed to init assistant: {exc}")
@@ -191,7 +206,7 @@ def chat_loop() -> None:
 
             run = client.beta.threads.runs.create(
                 thread_id=thread.id,
-                assistant_id=assistant.id,
+                assistant_id=assistant_id,
             )
         except openai.OpenAIError as exc:
             print(f"API error: {exc}")
