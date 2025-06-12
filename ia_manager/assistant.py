@@ -148,45 +148,17 @@ def _execute(func_name: str, params: dict) -> str:
     func = FUNC_MAP.get(func_name)
     if not func:
         return f"Unknown function {func_name}"
+    
     args = SimpleNamespace(**params)
     buf = io.StringIO()
-    # allow legacy Assistant_Token to hold the API key or an assistant ID
-    if not api_key and token and not token.startswith("asst_"):
-        api_key = token
+    with redirect_stdout(buf):
+        try:
+            func(args)
+        except Exception as e:
+            return f"Erreur lors de l'exécution de {func_name}: {e}"
+    return buf.getvalue().strip()
 
-    if not api_key:
-        raise RuntimeError("Set OPENAI_API_KEY or Assistant_Token with an API key")
 
-    _client = openai.OpenAI(api_key=api_key)
-
-    _assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
-    if not _assistant_id and token and token.startswith("asst_"):
-        return
-
-    api_key = os.getenv("OPENAI_API_KEY")
-    assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
-
-    if not api_key:
-        raise RuntimeError("Set OPENAI_API_KEY")
-
-    print("[DEBUG] Initialisation du client OpenAI...")
-    _client = openai.Client(api_key=api_key)
-
-    if assistant_id:
-        print(f"[DEBUG] Assistant ID fourni via env: {assistant_id}")
-        _assistant_id = assistant_id
-    else:
-        print("[DEBUG] Création d'un nouvel assistant...")
-        assistant = _client.beta.assistants.create(
-            name="IA Manager",
-            instructions=SYSTEM_PROMPT,
-            tools=TOOLS,
-            model="gpt-4-turbo",
-        )
-        _assistant_id = assistant.id
-
-    print("[DEBUG] Création d'un nouveau thread...")
-    _thread = _client.beta.threads.create()
 
 def send_message(message: str) -> str:
     _ensure_client()
@@ -198,12 +170,6 @@ def send_message(message: str) -> str:
             content=message,
         )
 
-            # openai>=1.2 returns a RequiredAction object, not a dict
-            action = run.required_action
-            if isinstance(action, dict):
-                calls = action["submit_tool_outputs"]["tool_calls"]
-            else:
-                calls = action.submit_tool_outputs.tool_calls
         run = _client.beta.threads.runs.create(
             thread_id=_thread.id,
             assistant_id=_assistant_id,
@@ -229,17 +195,23 @@ def send_message(message: str) -> str:
             break
         elif run.status == "requires_action":
             print("[DEBUG] L'assistant demande une action...")
-            calls = run.required_action["submit_tool_outputs"]["tool_calls"]
+
+            action = run.required_action
+            if not action or not hasattr(action, "submit_tool_outputs"):
+                return "[ERREUR] Aucune action submit_tool_outputs fournie."
+
+            calls = action.submit_tool_outputs.tool_calls
+
             outputs = []
             for call in calls:
-                name = call["function"]["name"]
+                name = call.function.name
                 try:
-                    args = json.loads(call["function"]["arguments"])
+                    args = json.loads(call.function.arguments)
                 except json.JSONDecodeError:
                     args = {}
                 print(f"[DEBUG] Appel de la fonction: {name} avec args: {args}")
                 result = _execute(name, args)
-                outputs.append({"tool_call_id": call["id"], "output": result})
+                outputs.append({"tool_call_id": call.id, "output": result})
             try:
                 print("[DEBUG] Envoi des résultats des outils à l'assistant...")
                 _client.beta.threads.runs.submit_tool_outputs(
@@ -263,6 +235,7 @@ def send_message(message: str) -> str:
         return f"API error fetching messages: {exc}"
     return ""
 
+
 def chat_loop() -> None:
     try:
         _ensure_client()
@@ -279,3 +252,23 @@ def chat_loop() -> None:
             break
         reply = send_message(user)
         print(f"assistant> {reply}")
+
+def _ensure_client():
+    global _client, _assistant_id, _thread
+
+    if _client is None:
+        print("[DEBUG] Initialisation du client OpenAI...")
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY non défini.")
+        _client = openai.Client(api_key=api_key)
+
+    if _assistant_id is None:
+        _assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
+        if not _assistant_id:
+            raise RuntimeError("OPENAI_ASSISTANT_ID non défini.")
+
+    if _thread is None:
+        print("[DEBUG] Création d'un nouveau thread...")
+        _thread = _client.beta.threads.create()
+
