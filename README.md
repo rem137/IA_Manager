@@ -22,9 +22,10 @@ start time.
 
 If an OpenAI API key is available via the `OPENAI_API_KEY` environment variable
 (or `Assistant_Token` for backward compatibility), you can chat with the beta
-Assistant API to control the CLI. `Assistant_Token` can also hold a published
-assistant ID (value starting with `asst_`). In that case the existing assistant
-is used instead of creating one. Run:
+Assistant API to control the CLI. You may reuse an existing assistant by
+setting its ID in `OPENAI_ASSISTANT_ID` (or in `Assistant_Token` when the value
+starts with `asst_`). If no ID is provided a new assistant is created
+automatically. Run:
 
 ```
 python -m ia_manager assistant

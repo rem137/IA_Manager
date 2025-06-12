@@ -27,6 +27,7 @@ COMMAND_HELP = """Available commands:
   plan_day [JJ/MM]
   recommend_task
   calendar
+  assistant
   help
   quit
 """
