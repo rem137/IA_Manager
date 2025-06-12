@@ -150,16 +150,17 @@ def _execute(func_name: str, params: dict) -> str:
         return f"Unknown function {func_name}"
     args = SimpleNamespace(**params)
     buf = io.StringIO()
-    try:
-        with redirect_stdout(buf):
-            func(args)
-        return buf.getvalue().strip()
-    except Exception as e:
-        return f"Execution error: {e}"
+    # allow legacy Assistant_Token to hold the API key or an assistant ID
+    if not api_key and token and not token.startswith("asst_"):
+        api_key = token
 
-def _ensure_client():
-    global _client, _assistant_id, _thread
-    if _client is not None and _thread is not None:
+    if not api_key:
+        raise RuntimeError("Set OPENAI_API_KEY or Assistant_Token with an API key")
+
+    _client = openai.OpenAI(api_key=api_key)
+
+    _assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
+    if not _assistant_id and token and token.startswith("asst_"):
         return
 
     api_key = os.getenv("OPENAI_API_KEY")

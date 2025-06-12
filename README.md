@@ -20,12 +20,11 @@ start time.
 
 ## OpenAI assistant (beta)
 
-If an OpenAI API key is available via the `OPENAI_API_KEY` environment variable
-(or `Assistant_Token` for backward compatibility), you can chat with the beta
-Assistant API to control the CLI. You may reuse an existing assistant by
-setting its ID in `OPENAI_ASSISTANT_ID` (or in `Assistant_Token` when the value
-starts with `asst_`). If no ID is provided a new assistant is created
-automatically. Run:
+Set an OpenAI API key in the `OPENAI_API_KEY` environment variable to enable the
+assistant. The old `Assistant_Token` variable is still accepted as a fallback
+for the API key or to provide a pre‑existing assistant ID (values beginning with
+`asst_`). If no ID is supplied via `OPENAI_ASSISTANT_ID`, a new assistant is
+created automatically. Run:
 
 ```
 python -m ia_manager assistant
@@ -33,9 +32,9 @@ python -m ia_manager assistant
 
 The assistant decides which CLI function to call in order to manage your
 projects and tasks. Install the latest `openai` package to enable this feature.
-Set your API key in `OPENAI_API_KEY`. If that variable is not available,
-`Assistant_Token` may contain either an API key or an assistant ID and will be
-used as a fallback:
+`OPENAI_API_KEY` **must** contain a valid API key. `Assistant_Token` can be used
+instead for backward compatibility or to specify the assistant ID. Example
+installation:
 
 ```
 pip install openai
@@ -43,8 +42,14 @@ pip install openai
 
 ## Web interface
 
-A Flask-based web UI is available for managing projects and tasks. The
-interface uses a dark futuristic theme with red accents. It is organised in
+A Flask-based web UI is available for managing projects and tasks. Make sure the
+`flask` package is installed:
+
+```
+pip install flask
+```
+
+The interface uses a dark futuristic theme with red accents. It is organised in
 three columns:
 
 * a menu sidebar on the left
