@@ -46,7 +46,7 @@ FUNCTIONS = [
             "properties": {
                 "project": {"type": "string", "description": "ID ou nom du projet"},
                 "name": {"type": "string", "description": "Titre de la tâche"},
-                "due": {"type": "string", "description": "Date limite JJ/MM"},
+                "due": {"type": "string", "description": "Date limite YYYY-MM-DD"},
                 "estimated": {"type": "integer", "description": "Durée estimée (heures)"},
                 "importance": {"type": "integer", "description": "Importance 1-5"},
                 "description": {"type": "string", "description": "Description de la tâche"},
@@ -76,8 +76,8 @@ FUNCTIONS = [
             "properties": {
                 "task_id": {"type": "integer", "description": "Identifiant de la tâche"},
                 "title": {"type": "string", "description": "Nouveau titre"},
-                "due": {"type": "string", "description": "Nouvelle date limite JJ/MM"},
-                "desc": {"type": "string", "description": "Nouvelle description"},
+                "due": {"type": "string", "description": "Nouvelle date limite YYYY-MM-DD"},
+                "description": {"type": "string", "description": "Nouvelle description"},
                 "estimated": {"type": "integer", "description": "Durée estimée (heures)"},
                 "importance": {"type": "integer", "description": "Importance 1-5"},
                 "status": {"type": "string", "description": "Nouveau statut"},
@@ -126,7 +126,6 @@ FUNCTIONS = [
     },
 ]
 
-# Tools format for the assistant API
 TOOLS = [{"type": "function", "function": f} for f in FUNCTIONS]
 
 FUNC_MAP = {
@@ -141,11 +140,9 @@ FUNC_MAP = {
     "recommend_task": commands.recommend_task,
 }
 
-# Cached assistant client/thread
 _client = None
 _assistant_id = None
 _thread = None
-
 
 def _execute(func_name: str, params: dict) -> str:
     func = FUNC_MAP.get(func_name)
@@ -153,33 +150,32 @@ def _execute(func_name: str, params: dict) -> str:
         return f"Unknown function {func_name}"
     args = SimpleNamespace(**params)
     buf = io.StringIO()
-    with redirect_stdout(buf):
-        func(args)
-    return buf.getvalue().strip()
-
+    try:
+        with redirect_stdout(buf):
+            func(args)
+        return buf.getvalue().strip()
+    except Exception as e:
+        return f"Execution error: {e}"
 
 def _ensure_client():
-    """Initialise the OpenAI client and thread if needed."""
     global _client, _assistant_id, _thread
     if _client is not None and _thread is not None:
         return
 
     api_key = os.getenv("OPENAI_API_KEY")
-    token = os.getenv("Assistant_Token")
+    assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
 
-    if api_key:
-        _client = openai.OpenAI(api_key=api_key)
-    elif token and not token.startswith("asst_"):
-        _client = openai.OpenAI(api_key=token)
+    if not api_key:
+        raise RuntimeError("Set OPENAI_API_KEY")
+
+    print("[DEBUG] Initialisation du client OpenAI...")
+    _client = openai.Client(api_key=api_key)
+
+    if assistant_id:
+        print(f"[DEBUG] Assistant ID fourni via env: {assistant_id}")
+        _assistant_id = assistant_id
     else:
-        raise RuntimeError("Set OPENAI_API_KEY or a valid Assistant_Token")
-
-    if token and token.startswith("asst_"):
-        _assistant_id = token
-    else:
-        _assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
-
-    if not _assistant_id:
+        print("[DEBUG] Création d'un nouvel assistant...")
         assistant = _client.beta.assistants.create(
             name="IA Manager",
             instructions=SYSTEM_PROMPT,
@@ -188,19 +184,20 @@ def _ensure_client():
         )
         _assistant_id = assistant.id
 
+    print("[DEBUG] Création d'un nouveau thread...")
     _thread = _client.beta.threads.create()
 
-
 def send_message(message: str) -> str:
-    """Send a message to the assistant and return its reply."""
     _ensure_client()
     try:
+        print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
             thread_id=_thread.id,
             role="user",
             content=message,
         )
 
+        print("[DEBUG] Lancement du run...")
         run = _client.beta.threads.runs.create(
             thread_id=_thread.id,
             assistant_id=_assistant_id,
@@ -215,9 +212,17 @@ def send_message(message: str) -> str:
             )
         except openai.OpenAIError as exc:
             return f"API error during run: {exc}"
+
+        print(f"[DEBUG] Statut du run: {run.status}")
+        if run.status == "failed":
+            print("[DEBUG] Détails du run échoué:")
+            print(json.dumps(run.model_dump(), indent=2))
+            break
+
         if run.status == "completed":
             break
-        if run.status == "requires_action":
+        elif run.status == "requires_action":
+            print("[DEBUG] L'assistant demande une action...")
             calls = run.required_action["submit_tool_outputs"]["tool_calls"]
             outputs = []
             for call in calls:
@@ -226,10 +231,12 @@ def send_message(message: str) -> str:
                     args = json.loads(call["function"]["arguments"])
                 except json.JSONDecodeError:
                     args = {}
+                print(f"[DEBUG] Appel de la fonction: {name} avec args: {args}")
                 result = _execute(name, args)
                 outputs.append({"tool_call_id": call["id"], "output": result})
             try:
-                run = _client.beta.threads.runs.submit_tool_outputs(
+                print("[DEBUG] Envoi des résultats des outils à l'assistant...")
+                _client.beta.threads.runs.submit_tool_outputs(
                     thread_id=_thread.id,
                     run_id=run.id,
                     tool_outputs=outputs,
@@ -237,22 +244,20 @@ def send_message(message: str) -> str:
             except openai.OpenAIError as exc:
                 return f"API error submitting outputs: {exc}"
         else:
+            print("[DEBUG] Attente...")
             time.sleep(1)
 
     try:
-        messages = _client.beta.threads.messages.list(
-            thread_id=_thread.id, order="desc"
-        )
+        print("[DEBUG] Récupération des messages de réponse...")
+        messages = _client.beta.threads.messages.list(thread_id=_thread.id, order="desc")
+        for msg in messages.data:
+            if msg.role == "assistant":
+                return msg.content[0].text.value
     except openai.OpenAIError as exc:
         return f"API error fetching messages: {exc}"
-    for msg in messages.data:
-        if msg.role == "assistant":
-            return msg.content[0].text.value
     return ""
 
-
 def chat_loop() -> None:
-    """Interactive console chat with the Assistant API."""
     try:
         _ensure_client()
     except RuntimeError as exc:
