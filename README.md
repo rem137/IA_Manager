@@ -29,8 +29,9 @@ python -m ia_manager assistant
 ```
 
 The assistant decides which CLI function to call in order to manage your
-projects and tasks.
-Install the latest `openai` package to enable this feature:
+projects and tasks. Install the latest `openai` package to enable this feature.
+Set your API key in `OPENAI_API_KEY`. If that variable is not available,
+`Assistant_Token` is also recognized as a fallback:
 
 ```
 pip install openai

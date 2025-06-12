@@ -158,14 +158,21 @@ def chat_loop() -> None:
     if not token:
         print("Set OPENAI_API_KEY or Assistant_Token environment variable")
         return
-    client = openai.OpenAI(api_key=token)
-    assistant = client.beta.assistants.create(
-        name="IA Manager",
-        instructions=SYSTEM_PROMPT,
-        tools=TOOLS,
-        model="gpt-4-turbo",
-    )
-    thread = client.beta.threads.create()
+    try:
+        client = openai.OpenAI(api_key=token)
+        assistant = client.beta.assistants.create(
+            name="IA Manager",
+            instructions=SYSTEM_PROMPT,
+            tools=TOOLS,
+            model="gpt-4-turbo",
+        )
+        thread = client.beta.threads.create()
+    except openai.AuthenticationError:
+        print("Invalid API key. Check Assistant_Token or OPENAI_API_KEY.")
+        return
+    except Exception as exc:
+        print(f"Failed to init assistant: {exc}")
+        return
 
     print("Type 'quit' to exit")
     while True:
@@ -175,19 +182,29 @@ def chat_loop() -> None:
         if user.lower() in {"quit", "exit"}:
             break
 
-        client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=user,
-        )
+        try:
+            client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=user,
+            )
 
-        run = client.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=assistant.id,
-        )
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=assistant.id,
+            )
+        except openai.OpenAIError as exc:
+            print(f"API error: {exc}")
+            continue
 
         while True:
-            run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+            try:
+                run = client.beta.threads.runs.retrieve(
+                    thread_id=thread.id, run_id=run.id
+                )
+            except openai.OpenAIError as exc:
+                print(f"API error during run: {exc}")
+                break
             if run.status == "completed":
                 break
             if run.status == "requires_action":
@@ -201,15 +218,25 @@ def chat_loop() -> None:
                         args = {}
                     result = _execute(name, args)
                     outputs.append({"tool_call_id": call["id"], "output": result})
-                run = client.beta.threads.runs.submit_tool_outputs(
-                    thread_id=thread.id,
-                    run_id=run.id,
-                    tool_outputs=outputs,
-                )
+                try:
+                    run = client.beta.threads.runs.submit_tool_outputs(
+                        thread_id=thread.id,
+                        run_id=run.id,
+                        tool_outputs=outputs,
+                    )
+                except openai.OpenAIError as exc:
+                    print(f"API error submitting outputs: {exc}")
+                    break
             else:
                 time.sleep(1)
 
-        messages = client.beta.threads.messages.list(thread_id=thread.id, order="desc")
+        try:
+            messages = client.beta.threads.messages.list(
+                thread_id=thread.id, order="desc"
+            )
+        except openai.OpenAIError as exc:
+            print(f"API error fetching messages: {exc}")
+            continue
         for msg in messages.data:
             if msg.role == "assistant":
                 print(f"assistant> {msg.content[0].text.value}")
