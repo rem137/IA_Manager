@@ -56,6 +56,8 @@ python -m ia_manager.web.server
 ```
 
 The interface lists projects and their tasks and includes a chat area.
+Messages typed in this chat are sent to the OpenAI assistant via the
+`/api/chat` endpoint.
 Projects can be renamed or deleted directly in the list.
 Click a task to open a detail modal where you can start/stop the timer or mark it done.
 New tasks are added through a dedicated form with name, description and deadline fields.

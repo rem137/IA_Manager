@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime, timedelta
 from ..services import storage, planner, logger
+from .. import assistant
 from ..models.project import Project
 from ..models.task import Task
 from ..models.notification import Notification
@@ -299,6 +300,19 @@ def handle_notification(nid, action):
             logger.log(f"Web: notification {nid} {action}")
             return jsonify({'status': 'ok'})
     return jsonify({'error': 'not found'}), 404
+
+
+@app.route('/api/chat', methods=['POST'])
+def chat_api():
+    data = request.json or {}
+    message = data.get('message', '').strip()
+    if not message:
+        return jsonify({'error': 'no message'}), 400
+    try:
+        reply = assistant.send_message(message)
+    except RuntimeError as exc:
+        return jsonify({'error': str(exc)}), 500
+    return jsonify({'reply': reply})
 
 if __name__ == '__main__':
     app.run(debug=True)

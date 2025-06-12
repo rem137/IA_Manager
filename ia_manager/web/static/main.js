@@ -306,16 +306,33 @@ async function loadDashboard() {
 }
 
 
-function sendMessage() {
+async function sendMessage() {
     const input = document.getElementById('message');
     const msg = input.value.trim();
     if (!msg) return;
     const log = document.getElementById('chat-log');
-    const div = document.createElement('div');
-    div.textContent = msg;
-    log.appendChild(div);
+    const u = document.createElement('div');
+    u.className = 'user-msg';
+    u.textContent = msg;
+    log.appendChild(u);
     log.scrollTop = log.scrollHeight;
     input.value = '';
+
+    const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    });
+    const r = document.createElement('div');
+    r.className = 'bot-msg';
+    if (res.ok) {
+        const data = await res.json();
+        r.textContent = data.reply || '';
+    } else {
+        r.textContent = 'Error';
+    }
+    log.appendChild(r);
+    log.scrollTop = log.scrollHeight;
 }
 
 async function loadCalendar() {
