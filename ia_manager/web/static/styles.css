@@ -250,6 +250,23 @@ button.wide {
     color: var(--accent);
 }
 
+.bot-msg.thinking::after {
+    content: ' ...';
+    animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+.action-log {
+    font-size: 12px;
+    color: var(--muted-color);
+    white-space: pre-line;
+    margin: 2px 0 6px 0;
+}
+
 .modal {
     position: fixed;
     top: 0;

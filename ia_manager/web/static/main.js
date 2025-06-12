@@ -318,20 +318,29 @@ async function sendMessage() {
     log.scrollTop = log.scrollHeight;
     input.value = '';
 
+    const r = document.createElement('div');
+    r.className = 'bot-msg thinking';
+    log.appendChild(r);
+    log.scrollTop = log.scrollHeight;
+
     const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg })
     });
-    const r = document.createElement('div');
-    r.className = 'bot-msg';
+    r.classList.remove('thinking');
     if (res.ok) {
         const data = await res.json();
         r.textContent = data.reply || '';
+        if (data.logs && data.logs.length) {
+            const pre = document.createElement('pre');
+            pre.className = 'action-log';
+            pre.textContent = data.logs.join('\n');
+            log.appendChild(pre);
+        }
     } else {
         r.textContent = 'Error';
     }
-    log.appendChild(r);
     log.scrollTop = log.scrollHeight;
 }
 

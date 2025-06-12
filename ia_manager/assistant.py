@@ -236,6 +236,15 @@ def send_message(message: str) -> str:
     return ""
 
 
+def send_message_verbose(message: str) -> tuple[str, list[str]]:
+    """Send a message and return the reply along with debug logs."""
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        reply = send_message(message)
+    logs = [line.strip() for line in buf.getvalue().splitlines() if line.strip()]
+    return reply, logs
+
+
 def chat_loop() -> None:
     try:
         _ensure_client()

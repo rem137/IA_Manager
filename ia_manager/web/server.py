@@ -309,10 +309,10 @@ def chat_api():
     if not message:
         return jsonify({'error': 'no message'}), 400
     try:
-        reply = assistant.send_message(message)
+        reply, logs = assistant.send_message_verbose(message)
     except RuntimeError as exc:
         return jsonify({'error': str(exc)}), 500
-    return jsonify({'reply': reply})
+    return jsonify({'reply': reply, 'logs': logs})
 
 if __name__ == '__main__':
     app.run(debug=True)
