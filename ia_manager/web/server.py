@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime, timedelta
+import re
 from ..services import storage, planner, logger
 from .. import assistant
 from ..models.project import Project
@@ -10,6 +11,16 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # simple in-memory notification queue
 notifications: list[Notification] = []
+
+
+def _extract_actions(logs: list[str]) -> list[str]:
+    actions: list[str] = []
+    for line in logs:
+        m = re.search(r"Appel de la fonction: (\w+)", line)
+        if m:
+            name = m.group(1).replace('_', ' ')
+            actions.append(f"En train de {name}...")
+    return actions
 
 @app.route('/')
 def index():
@@ -312,7 +323,8 @@ def chat_api():
         reply, logs = assistant.send_message_verbose(message)
     except RuntimeError as exc:
         return jsonify({'error': str(exc)}), 500
-    return jsonify({'reply': reply, 'logs': logs})
+    actions = _extract_actions(logs)
+    return jsonify({'reply': reply, 'actions': actions})
 
 if __name__ == '__main__':
     app.run(debug=True)

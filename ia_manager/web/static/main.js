@@ -313,13 +313,17 @@ async function sendMessage() {
     const log = document.getElementById('chat-log');
     const u = document.createElement('div');
     u.className = 'user-msg';
-    u.textContent = msg;
+    const us = document.createElement('span');
+    us.textContent = msg;
+    u.appendChild(us);
     log.appendChild(u);
     log.scrollTop = log.scrollHeight;
     input.value = '';
 
     const r = document.createElement('div');
     r.className = 'bot-msg thinking';
+    const rs = document.createElement('span');
+    r.appendChild(rs);
     log.appendChild(r);
     log.scrollTop = log.scrollHeight;
 
@@ -331,15 +335,20 @@ async function sendMessage() {
     r.classList.remove('thinking');
     if (res.ok) {
         const data = await res.json();
-        r.textContent = data.reply || '';
-        if (data.logs && data.logs.length) {
-            const pre = document.createElement('pre');
-            pre.className = 'action-log';
-            pre.textContent = data.logs.join('\n');
-            log.appendChild(pre);
+        rs.textContent = data.reply || '';
+        if (data.actions && data.actions.length) {
+            data.actions.forEach(act => {
+                const a = document.createElement('div');
+                a.className = 'bot-msg';
+                const as = document.createElement('span');
+                as.className = 'action';
+                as.textContent = act;
+                a.appendChild(as);
+                log.insertBefore(a, r);
+            });
         }
     } else {
-        r.textContent = 'Error';
+        rs.textContent = 'Error';
     }
     log.scrollTop = log.scrollHeight;
 }
