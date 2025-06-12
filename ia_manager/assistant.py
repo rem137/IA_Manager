@@ -154,9 +154,9 @@ def _execute(func_name: str, params: dict) -> str:
 
 
 def chat_loop() -> None:
-    token = os.getenv("Assistant_Token")
+    token = os.getenv("OPENAI_API_KEY") or os.getenv("Assistant_Token")
     if not token:
-        print("Assistant_Token environment variable not set")
+        print("Set OPENAI_API_KEY or Assistant_Token environment variable")
         return
     client = openai.OpenAI(api_key=token)
     assistant = client.beta.assistants.create(

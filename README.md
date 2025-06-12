@@ -20,8 +20,9 @@ start time.
 
 ## OpenAI assistant (beta)
 
-If the environment variable `Assistant_Token` is set with an OpenAI API key,
-you can chat with the beta Assistant API to control the CLI. Run:
+If an OpenAI API key is available via the `OPENAI_API_KEY` environment variable
+(or `Assistant_Token` for backward compatibility), you can chat with the beta
+Assistant API to control the CLI. Run:
 
 ```
 python -m ia_manager assistant
