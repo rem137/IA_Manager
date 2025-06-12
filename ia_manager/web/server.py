@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, Response
 from datetime import datetime, timedelta
 import re
+import json
 from ..services import storage, planner, logger
 from .. import assistant
 from ..models.project import Project
@@ -325,6 +326,19 @@ def chat_api():
         return jsonify({'error': str(exc)}), 500
     actions = _extract_actions(logs)
     return jsonify({'reply': reply, 'actions': actions})
+
+
+@app.route('/api/chat/stream')
+def chat_stream():
+    message = request.args.get('message', '').strip()
+    if not message:
+        return 'no message', 400
+
+    def generate():
+        for event in assistant.send_message_events(message):
+            yield 'data: ' + json.dumps(event) + '\n\n'
+
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)
