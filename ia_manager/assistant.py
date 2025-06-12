@@ -197,7 +197,12 @@ def send_message(message: str) -> str:
             content=message,
         )
 
-        print("[DEBUG] Lancement du run...")
+            # openai>=1.2 returns a RequiredAction object, not a dict
+            action = run.required_action
+            if isinstance(action, dict):
+                calls = action["submit_tool_outputs"]["tool_calls"]
+            else:
+                calls = action.submit_tool_outputs.tool_calls
         run = _client.beta.threads.runs.create(
             thread_id=_thread.id,
             assistant_id=_assistant_id,
