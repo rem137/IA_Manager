@@ -341,6 +341,16 @@ def chat_stream():
     return Response(generate(), mimetype='text/event-stream')
 
 
+@app.route('/api/search')
+def search_api():
+    """Return a short context paragraph for the given query."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'result': ''})
+    result = memory.get_context(query, max_chars=500)
+    return jsonify({'result': result})
+
+
 @app.route('/api/personality', methods=['GET', 'POST'])
 def personality_api():
     """Get or update user personality."""

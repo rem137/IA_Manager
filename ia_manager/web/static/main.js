@@ -276,13 +276,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('save-settings').onclick = saveSettings;
     const goBtn = document.getElementById('browser-go');
     if (goBtn) {
-        goBtn.onclick = () => {
-            const url = document.getElementById('browser-url').value.trim();
-            if (url) {
-                document.getElementById('browser-frame').src = url.startsWith('http') ? url : 'http://' + url;
-            }
+        goBtn.onclick = async () => {
+            const q = document.getElementById('browser-query').value.trim();
+            if (!q) return;
+            const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+            const data = await res.json();
+            document.getElementById('browser-result').textContent = data.result || 'No match';
         };
-        document.getElementById('browser-url').addEventListener('keypress', (e) => {
+        document.getElementById('browser-query').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); goBtn.click(); }
         });
     }

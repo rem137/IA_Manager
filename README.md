@@ -69,7 +69,7 @@ Click a task to open a detail modal where you can start/stop the timer or mark i
 New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 The right column lists upcoming deadlines while the centre shows the task the AI recommends to start now.
-An extra **Browser** page lets you open any URL inside an embedded frame to quickly look things up without leaving the app.
+The **Browser** page now acts as a search engine over your notes and past messages. Enter a few keywords to get a short paragraph summarising the most relevant texts (max 500 characters).
 Navigate using the left menu to switch between the dashboard, project view,
 global tasks list, calendar, chat, the built-in browser and settings.
 

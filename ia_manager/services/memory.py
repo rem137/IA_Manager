@@ -136,7 +136,7 @@ def search_notes(query: str, notes: List[Note] | None = None, limit: int = 3) ->
     return list(reversed(results))
 
 
-def get_context(query: str, max_chars: int = 300) -> str:
+def get_context(query: str, max_chars: int = 500) -> str:
     """Return a short summary of history and notes related to the query."""
     notes = search_notes(query)
     hist = search_history(query)
