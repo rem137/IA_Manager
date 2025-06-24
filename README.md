@@ -79,7 +79,7 @@ and show the time when provided. Data for a full week can be obtained via the
 
 ## AI Room demo
 
-A minimal 3D room is provided under `/room` to showcase a modular environment.
+A minimal 2D room is provided under `/room` to showcase a modular environment.
 Objects in the scene (bed, computer, window) are independent and controllable
 via the `/api/room/objects/<id>` endpoint.
 An event stream is available at `/api/room/events`.

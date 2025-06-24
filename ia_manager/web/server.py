@@ -316,7 +316,7 @@ def chat_api():
         return jsonify({'error': str(exc)}), 500
     return jsonify({'reply': reply})
 
-# ---------- 3D AI room ----------
+# ---------- AI room ----------
 
 # simple state store for room objects
 room_state = {
@@ -329,7 +329,7 @@ room_events: list[dict] = []
 
 @app.route('/room')
 def room_page():
-    """Display the 3D AI room."""
+    """Display the 2D AI room."""
     return render_template('room.html')
 
 
