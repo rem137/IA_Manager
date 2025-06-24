@@ -1,4 +1,6 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, Response
+import json
+import time
 from datetime import datetime, timedelta
 from ..services import storage, planner, logger
 from .. import assistant
@@ -313,6 +315,54 @@ def chat_api():
     except RuntimeError as exc:
         return jsonify({'error': str(exc)}), 500
     return jsonify({'reply': reply})
+
+# ---------- AI room ----------
+
+# simple state store for room objects
+room_state = {
+    'bed': {'on': True},
+    'computer': {'on': True},
+    'window': {'on': True, 'weather': 'sunny'},
+}
+room_events: list[dict] = []
+
+
+@app.route('/room')
+def room_page():
+    """Display the 2D AI room."""
+    return render_template('room.html')
+
+
+@app.route('/api/room/objects')
+def get_room_objects():
+    """Return list of room objects with their state."""
+    data = [{'id': oid, 'state': st} for oid, st in room_state.items()]
+    return jsonify(data)
+
+
+@app.route('/api/room/objects/<oid>', methods=['POST'])
+def update_room_object(oid):
+    st = room_state.get(oid)
+    if not st:
+        return jsonify({'error': 'not found'}), 404
+    data = request.json or {}
+    st.update(data)
+    room_events.append({'id': oid, 'state': st.copy()})
+    return jsonify({'status': 'ok', 'state': st})
+
+
+@app.route('/api/room/events')
+def room_event_stream():
+    """Stream room events using Server-Sent Events."""
+    def gen():
+        last = 0
+        while True:
+            if last < len(room_events):
+                evt = room_events[last]
+                last += 1
+                yield f"data: {json.dumps(evt)}\n\n"
+            time.sleep(1)
+    return Response(gen(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)
