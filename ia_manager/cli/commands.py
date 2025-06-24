@@ -373,6 +373,8 @@ def add_note(args):
 def list_notes(args):
     notes = memory.load_notes()
     for n in notes:
+        if n.internal:
+            continue
         if args.project and n.project_id != args.project:
             continue
         if args.tag and args.tag not in n.tags:
@@ -386,10 +388,17 @@ def search_notes(args):
     notes = memory.load_notes()
     q = args.query.lower()
     for n in notes:
+        if n.internal:
+            continue
         if q in n.text.lower() or any(q in t.lower() for t in n.tags):
             tg = f" [{', '.join(n.tags)}]" if n.tags else ""
             proj = f" (proj {n.project_id})" if n.project_id else ""
             print(f"{n.id}: {n.text}{tg}{proj}")
+
+
+def add_internal_note_cmd(args):
+    memory.add_internal_note(args.text)
+    print("Internal note added")
 
 
 def set_personality(args):
@@ -528,6 +537,10 @@ def build_parser() -> argparse.ArgumentParser:
     n_search = sub.add_parser("search_notes")
     n_search.add_argument("query")
     n_search.set_defaults(func=search_notes)
+
+    priv = sub.add_parser("remember_note")
+    priv.add_argument("text")
+    priv.set_defaults(func=add_internal_note_cmd)
 
     pers = sub.add_parser("set_personality")
     pers.add_argument("--name")

@@ -107,5 +107,12 @@ automatically searched to provide context. A lightweight search engine looks for
 matching notes and previous messages, then prepends a short summary before each
 request to keep token usage low.
 
+The assistant can also store private notes using the `remember_note` function.
+These internal notes are indexed for context but hidden from CLI commands and
+web search results.
+
+All chat messages are written to `ia_manager/data/log.txt` so you can audit the
+conversation history if needed.
+
 All callable functions are listed in `ia_manager/data/assistant_commands.json`
 for reference.

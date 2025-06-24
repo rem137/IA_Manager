@@ -40,6 +40,14 @@ def save_notes(notes: List[Note]):
     save_memory(mem)
 
 
+def add_internal_note(text: str):
+    """Store a note for the assistant only."""
+    notes = load_notes()
+    note_id = max([n.id for n in notes], default=0) + 1
+    notes.append(Note(id=note_id, text=text, internal=True))
+    save_notes(notes)
+
+
 def load_custom_session_note() -> str:
     mem = load_memory()
     return mem.get("session_note", "")
@@ -123,12 +131,19 @@ def search_history(query: str, limit: int = 3) -> list:
     return list(reversed(results))
 
 
-def search_notes(query: str, notes: List[Note] | None = None, limit: int = 3) -> list[Note]:
+def search_notes(
+    query: str,
+    notes: List[Note] | None = None,
+    limit: int = 3,
+    include_internal: bool = False,
+) -> list[Note]:
     if notes is None:
         notes = load_notes()
     q = query.lower()
     results: list[Note] = []
     for n in reversed(notes):
+        if not include_internal and n.internal:
+            continue
         if q in n.text.lower() or any(q in t.lower() for t in n.tags):
             results.append(n)
         if len(results) >= limit:
@@ -136,9 +151,9 @@ def search_notes(query: str, notes: List[Note] | None = None, limit: int = 3) ->
     return list(reversed(results))
 
 
-def get_context(query: str, max_chars: int = 500) -> str:
+def get_context(query: str, max_chars: int = 500, include_internal: bool = False) -> str:
     """Return a short summary of history and notes related to the query."""
-    notes = search_notes(query)
+    notes = search_notes(query, include_internal=include_internal)
     hist = search_history(query)
     parts = []
     if notes:

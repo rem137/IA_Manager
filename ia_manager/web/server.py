@@ -347,7 +347,7 @@ def search_api():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({'result': ''})
-    result = memory.get_context(query, max_chars=500)
+    result = memory.get_context(query, max_chars=500, include_internal=False)
     return jsonify({'result': result})
 
 

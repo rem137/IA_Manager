@@ -126,6 +126,16 @@ FUNCTIONS = [
         "description": "Obtenir la tâche recommandée en priorité",
         "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
     },
+    {
+        "name": "remember_note",
+        "description": "Enregistrer une note interne pour l'assistant",
+        "parameters": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "Contenu"}},
+            "required": ["text"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 TOOLS = [{"type": "function", "function": f} for f in FUNCTIONS]
@@ -140,6 +150,7 @@ FUNC_MAP = {
     "list_schedule": commands.list_schedule,
     "mark_done": commands.mark_done,
     "recommend_task": commands.recommend_task,
+    "remember_note": commands.add_internal_note_cmd,
 }
 
 _client = None
@@ -164,12 +175,13 @@ def _execute(func_name: str, params: dict) -> str:
 
 def send_message(message: str) -> str:
     _ensure_client()
-    context = memory.get_context(message, max_chars=500)
+    context = memory.get_context(message, max_chars=500, include_internal=True)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
     full = f"{context}\n{message}" if context else message
     memory.append_history("user", message)
+    logger.log(f"user: {message}")
     try:
         print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
@@ -240,6 +252,7 @@ def send_message(message: str) -> str:
             if msg.role == "assistant":
                 reply = msg.content[0].text.value
                 memory.append_history("assistant", reply)
+                logger.log(f"assistant: {reply}")
                 return reply
     except openai.OpenAIError as exc:
         return f"API error fetching messages: {exc}"
@@ -273,11 +286,13 @@ def send_message_verbose(message: str) -> tuple[str, list[str]]:
 def send_message_events(message: str):
     """Yield events while processing the message."""
     _ensure_client()
-    context = memory.get_context(message, max_chars=500)
+    context = memory.get_context(message, max_chars=500, include_internal=True)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
         message = f"{context}\n{message}"
+    memory.append_history("user", message.split('\n')[-1])
+    logger.log(f"user: {message.split('\n')[-1]}")
     try:
         print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
@@ -348,7 +363,10 @@ def send_message_events(message: str):
         messages = _client.beta.threads.messages.list(thread_id=_thread.id, order="desc")
         for msg in messages.data:
             if msg.role == "assistant":
-                yield {"reply": msg.content[0].text.value}
+                reply = msg.content[0].text.value
+                memory.append_history("assistant", reply)
+                logger.log(f"assistant: {reply}")
+                yield {"reply": reply}
                 return
     except openai.OpenAIError as exc:
         yield {"reply": f"API error fetching messages: {exc}"}

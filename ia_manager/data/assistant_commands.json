@@ -217,5 +217,17 @@
       "properties": {},
       "additionalProperties": false
     }
+  },
+  {
+    "name": "remember_note",
+    "description": "Enregistrer une note interne pour l'assistant",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {"type": "string", "description": "Contenu"}
+      },
+      "required": ["text"],
+      "additionalProperties": false
+    }
   }
 ]

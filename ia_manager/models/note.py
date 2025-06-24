@@ -8,6 +8,7 @@ class Note:
     text: str
     tags: List[str] = field(default_factory=list)
     project_id: Optional[int] = None
+    internal: bool = False
     created: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
     def to_dict(self) -> dict:
@@ -16,6 +17,7 @@ class Note:
             "text": self.text,
             "tags": self.tags,
             "project_id": self.project_id,
+            "internal": self.internal,
             "created": self.created,
         }
 
@@ -26,5 +28,6 @@ class Note:
             text=data.get("text", ""),
             tags=list(data.get("tags", [])),
             project_id=data.get("project_id"),
+            internal=data.get("internal", False),
             created=data.get("created", datetime.utcnow().isoformat()),
         )

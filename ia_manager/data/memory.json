@@ -5,7 +5,16 @@
       "text": "Think about new UI",
       "tags": ["idea"],
       "project_id": 1,
+      "internal": false,
       "created": "2024-06-01T12:00:00"
+    },
+    {
+      "id": 2,
+      "text": "remember to refactor storage",
+      "tags": [],
+      "project_id": null,
+      "internal": true,
+      "created": "2024-06-01T12:05:00"
     }
   ],
   "session_note": ""
