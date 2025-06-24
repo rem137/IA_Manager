@@ -103,9 +103,10 @@ In the web interface, open the **Settings** page to adjust your name, sarcasm
 level and custom session note.
 
 When chatting with the assistant, each message is stored in the memory file and
-automatically searched to provide context. A lightweight search engine looks for
-matching notes and previous messages, then prepends a short summary before each
-request to keep token usage low.
+automatically searched to provide context. The search engine now scores each
+note or past message based on how many query keywords it contains,
+similar to a web browser. The most relevant snippets are summarised and
+prepended before each request to keep token usage low.
 
 The assistant can also store private notes using the `remember_note` function.
 These internal notes are indexed for context but hidden from CLI commands and

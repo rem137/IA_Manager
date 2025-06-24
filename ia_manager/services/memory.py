@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import List
 from datetime import datetime
+import re
 
 from ..models.note import Note
 from ..models.user import User
@@ -118,17 +119,26 @@ def append_history(role: str, text: str):
     save_history(history)
 
 
+
+def _score(text: str, tokens: list[str]) -> float:
+    words = set(re.findall(r"\w+", text.lower()))
+    if not words:
+        return 0.0
+    matched = sum(1 for t in tokens if t in words)
+    return matched / len(tokens) if tokens else 0.0
+
+
 def search_history(query: str, limit: int = 3) -> list:
-    """Return recent messages containing the query."""
+    """Return most relevant past messages."""
     history = load_history()
-    q = query.lower()
-    results = []
-    for item in reversed(history):
-        if q in item.get("text", "").lower():
-            results.append(item)
-        if len(results) >= limit:
-            break
-    return list(reversed(results))
+    tokens = re.findall(r"\w+", query.lower())
+    scored = []
+    for item in history:
+        score = _score(item.get("text", ""), tokens)
+        if score:
+            scored.append((score, item))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [item for _score_val, item in scored[:limit]]
 
 
 def search_notes(
@@ -139,16 +149,17 @@ def search_notes(
 ) -> list[Note]:
     if notes is None:
         notes = load_notes()
-    q = query.lower()
-    results: list[Note] = []
-    for n in reversed(notes):
+    tokens = re.findall(r"\w+", query.lower())
+    scored: list[tuple[float, Note]] = []
+    for n in notes:
         if not include_internal and n.internal:
             continue
-        if q in n.text.lower() or any(q in t.lower() for t in n.tags):
-            results.append(n)
-        if len(results) >= limit:
-            break
-    return list(reversed(results))
+        combined = n.text + " " + " ".join(n.tags)
+        score = _score(combined, tokens)
+        if score:
+            scored.append((score, n))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [n for _score_val, n in scored[:limit]]
 
 
 def get_context(query: str, max_chars: int = 500, include_internal: bool = False) -> str:
