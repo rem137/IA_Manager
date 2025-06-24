@@ -1,5 +1,7 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, Response
 from datetime import datetime, timedelta
+import re
+import json
 from ..services import storage, planner, logger
 from .. import assistant
 from ..models.project import Project
@@ -10,6 +12,16 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # simple in-memory notification queue
 notifications: list[Notification] = []
+
+
+def _extract_actions(logs: list[str]) -> list[str]:
+    actions: list[str] = []
+    for line in logs:
+        m = re.search(r"Appel de la fonction: (\w+)", line)
+        if m:
+            name = m.group(1).replace('_', ' ')
+            actions.append(f"En train de {name}...")
+    return actions
 
 @app.route('/')
 def index():
@@ -309,10 +321,24 @@ def chat_api():
     if not message:
         return jsonify({'error': 'no message'}), 400
     try:
-        reply = assistant.send_message(message)
+        reply, logs = assistant.send_message_verbose(message)
     except RuntimeError as exc:
         return jsonify({'error': str(exc)}), 500
-    return jsonify({'reply': reply})
+    actions = _extract_actions(logs)
+    return jsonify({'reply': reply, 'actions': actions})
+
+
+@app.route('/api/chat/stream')
+def chat_stream():
+    message = request.args.get('message', '').strip()
+    if not message:
+        return 'no message', 400
+
+    def generate():
+        for event in assistant.send_message_events(message):
+            yield 'data: ' + json.dumps(event) + '\n\n'
+
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     app.run(debug=True)

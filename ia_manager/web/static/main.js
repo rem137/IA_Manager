@@ -313,26 +313,45 @@ async function sendMessage() {
     const log = document.getElementById('chat-log');
     const u = document.createElement('div');
     u.className = 'user-msg';
-    u.textContent = msg;
+    const us = document.createElement('span');
+    us.textContent = msg;
+    u.appendChild(us);
     log.appendChild(u);
     log.scrollTop = log.scrollHeight;
     input.value = '';
 
-    const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-    });
     const r = document.createElement('div');
-    r.className = 'bot-msg';
-    if (res.ok) {
-        const data = await res.json();
-        r.textContent = data.reply || '';
-    } else {
-        r.textContent = 'Error';
-    }
+    r.className = 'bot-msg thinking';
+    const rs = document.createElement('span');
+    r.appendChild(rs);
     log.appendChild(r);
     log.scrollTop = log.scrollHeight;
+
+    const src = new EventSource('/api/chat/stream?message=' + encodeURIComponent(msg));
+    src.onmessage = (ev) => {
+        const data = JSON.parse(ev.data);
+        if (data.action) {
+            const a = document.createElement('div');
+            a.className = 'bot-msg';
+            const as = document.createElement('span');
+            as.className = 'action';
+            as.textContent = data.action;
+            a.appendChild(as);
+            log.insertBefore(a, r);
+            log.scrollTop = log.scrollHeight;
+        }
+        if (data.reply) {
+            r.classList.remove('thinking');
+            rs.textContent = data.reply;
+            log.scrollTop = log.scrollHeight;
+            src.close();
+        }
+    };
+    src.onerror = () => {
+        r.classList.remove('thinking');
+        rs.textContent = 'Error';
+        src.close();
+    };
 }
 
 async function loadCalendar() {

@@ -5,6 +5,7 @@ import openai
 from types import SimpleNamespace
 from contextlib import redirect_stdout
 import io
+import sys
 
 from .cli import commands
 
@@ -234,6 +235,110 @@ def send_message(message: str) -> str:
     except openai.OpenAIError as exc:
         return f"API error fetching messages: {exc}"
     return ""
+
+
+class _Tee(io.StringIO):
+    """Utility to duplicate stdout while capturing it."""
+
+    def __init__(self, *streams: io.TextIOBase):
+        super().__init__()
+        self.streams = streams
+
+    def write(self, s: str) -> int:
+        for st in self.streams:
+            st.write(s)
+            st.flush()
+        return super().write(s)
+
+
+def send_message_verbose(message: str) -> tuple[str, list[str]]:
+    """Send a message and return the reply along with debug logs."""
+    buf = io.StringIO()
+    tee = _Tee(sys.stdout, buf)
+    with redirect_stdout(tee):
+        reply = send_message(message)
+    logs = [line.strip() for line in buf.getvalue().splitlines() if line.strip()]
+    return reply, logs
+
+
+def send_message_events(message: str):
+    """Yield events while processing the message."""
+    _ensure_client()
+    try:
+        print("[DEBUG] Envoi du message à l'assistant...")
+        _client.beta.threads.messages.create(
+            thread_id=_thread.id,
+            role="user",
+            content=message,
+        )
+
+        run = _client.beta.threads.runs.create(
+            thread_id=_thread.id,
+            assistant_id=_assistant_id,
+        )
+    except openai.OpenAIError as exc:
+        yield {"reply": f"API error: {exc}"}
+        return
+
+    while True:
+        try:
+            run = _client.beta.threads.runs.retrieve(
+                thread_id=_thread.id, run_id=run.id
+            )
+        except openai.OpenAIError as exc:
+            yield {"reply": f"API error during run: {exc}"}
+            return
+
+        print(f"[DEBUG] Statut du run: {run.status}")
+        if run.status == "failed":
+            print("[DEBUG] Détails du run échoué:")
+            print(json.dumps(run.model_dump(), indent=2))
+            break
+
+        if run.status == "completed":
+            break
+        elif run.status == "requires_action":
+            print("[DEBUG] L'assistant demande une action...")
+            action = run.required_action
+            if not action or not hasattr(action, "submit_tool_outputs"):
+                yield {"reply": "[ERREUR] Aucune action submit_tool_outputs fournie."}
+                return
+            calls = action.submit_tool_outputs.tool_calls
+            outputs = []
+            for call in calls:
+                name = call.function.name
+                try:
+                    args = json.loads(call.function.arguments)
+                except json.JSONDecodeError:
+                    args = {}
+                print(f"[DEBUG] Appel de la fonction: {name} avec args: {args}")
+                yield {"action": f"En train de {name.replace('_', ' ')}..."}
+                result = _execute(name, args)
+                outputs.append({"tool_call_id": call.id, "output": result})
+            try:
+                print("[DEBUG] Envoi des résultats des outils à l'assistant...")
+                _client.beta.threads.runs.submit_tool_outputs(
+                    thread_id=_thread.id,
+                    run_id=run.id,
+                    tool_outputs=outputs,
+                )
+            except openai.OpenAIError as exc:
+                yield {"reply": f"API error submitting outputs: {exc}"}
+                return
+        else:
+            print("[DEBUG] Attente...")
+            time.sleep(1)
+
+    try:
+        print("[DEBUG] Récupération des messages de réponse...")
+        messages = _client.beta.threads.messages.list(thread_id=_thread.id, order="desc")
+        for msg in messages.data:
+            if msg.role == "assistant":
+                yield {"reply": msg.content[0].text.value}
+                return
+    except openai.OpenAIError as exc:
+        yield {"reply": f"API error fetching messages: {exc}"}
+
 
 
 def chat_loop() -> None:
