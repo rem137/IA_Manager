@@ -69,8 +69,9 @@ Click a task to open a detail modal where you can start/stop the timer or mark i
 New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 The right column lists upcoming deadlines while the centre shows the task the AI recommends to start now.
+An extra **Browser** page lets you open any URL inside an embedded frame to quickly look things up without leaving the app.
 Navigate using the left menu to switch between the dashboard, project view,
-global tasks list, calendar, chat and settings.
+global tasks list, calendar, chat, the built-in browser and settings.
 
 The calendar view displays the current week's schedule. Tasks are grouped by day
 and show the time when provided. Data for a full week can be obtained via the

@@ -274,6 +274,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('accept-proposal').onclick = () => alert('Tâche acceptée');
     document.getElementById('decline-proposal').onclick = loadDashboard;
     document.getElementById('save-settings').onclick = saveSettings;
+    const goBtn = document.getElementById('browser-go');
+    if (goBtn) {
+        goBtn.onclick = () => {
+            const url = document.getElementById('browser-url').value.trim();
+            if (url) {
+                document.getElementById('browser-frame').src = url.startsWith('http') ? url : 'http://' + url;
+            }
+        };
+        document.getElementById('browser-url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); goBtn.click(); }
+        });
+    }
     loadSettings();
     showView('dashboard-view');
 });
