@@ -11,6 +11,22 @@ the shell to see available commands. The main commands include creating and
 listing projects, managing tasks, showing the status, planning a day and
 generating documentation.
 
+## Persistent memory and notes
+
+KroniX now stores user preferences in `memory.json` and personal notes in
+`notes.json` under the `ia_manager/data` directory. Use the new commands to
+interact with this memory:
+
+```
+remember TEXT [--project NAME --tags tag1 tag2]   # store a note
+recall KEYWORD                                   # search notes
+set_sarcasm LEVEL                                # sarcasm level 0-3
+set_name NAME                                    # set your name
+```
+
+The interactive shell greets you using the stored name and responds with a
+slightly sarcastic tone depending on the chosen level.
+
 ## Task scheduling
 
 Tasks now support planned start and end times as well as an optional duration.
