@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template, Response
 from datetime import datetime, timedelta
 import re
 import json
-from ..services import storage, planner, logger
+from ..services import storage, planner, logger, memory
 from .. import assistant
 from ..models.project import Project
 from ..models.task import Task
@@ -339,6 +339,53 @@ def chat_stream():
             yield 'data: ' + json.dumps(event) + '\n\n'
 
     return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route('/api/search')
+def search_api():
+    """Return a short context paragraph for the given query."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'result': ''})
+    user = memory.load_user()
+    result = memory.get_context(query, max_chars=user.context_chars, include_internal=False)
+    return jsonify({'result': result})
+
+
+@app.route('/api/personality', methods=['GET', 'POST'])
+def personality_api():
+    """Get or update user personality."""
+    if request.method == 'GET':
+        user = memory.load_user()
+        return jsonify(user.to_dict())
+    data = request.json or {}
+    user = memory.load_user()
+    if 'name' in data:
+        user.name = data['name']
+    if 'sarcasm' in data:
+        try:
+            user.sarcasm = float(data['sarcasm'])
+        except (TypeError, ValueError):
+            pass
+        user.sarcasm = max(0.0, min(1.0, user.sarcasm))
+    if 'context_chars' in data:
+        try:
+            user.context_chars = int(data['context_chars'])
+        except (TypeError, ValueError):
+            pass
+        user.context_chars = max(100, min(1000, user.context_chars))
+    memory.save_user(user)
+    return jsonify(user.to_dict())
+
+
+@app.route('/api/session_note', methods=['GET', 'POST'])
+def session_note_api():
+    """Get or update the custom session note."""
+    if request.method == 'GET':
+        return jsonify({'note': memory.load_custom_session_note()})
+    data = request.json or {}
+    memory.save_custom_session_note(data.get('note', ''))
+    return jsonify({'note': data.get('note', '')})
 
 if __name__ == '__main__':
     app.run(debug=True)

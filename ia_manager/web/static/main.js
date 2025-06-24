@@ -11,6 +11,7 @@ function showView(id) {
     if (id === 'tasks-view') loadAllTasks();
     if (id === 'dashboard-view') loadDashboard();
     if (id === 'calendar-view') loadCalendar();
+    if (id === 'settings-view') loadSettings();
 }
 
 async function loadAllTasks() {
@@ -272,6 +273,21 @@ document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
     document.getElementById('accept-proposal').onclick = () => alert('Tâche acceptée');
     document.getElementById('decline-proposal').onclick = loadDashboard;
+    document.getElementById('save-settings').onclick = saveSettings;
+    const goBtn = document.getElementById('browser-go');
+    if (goBtn) {
+        goBtn.onclick = async () => {
+            const q = document.getElementById('browser-query').value.trim();
+            if (!q) return;
+            const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+            const data = await res.json();
+            document.getElementById('browser-result').textContent = data.result || 'No match';
+        };
+        document.getElementById('browser-query').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); goBtn.click(); }
+        });
+    }
+    loadSettings();
     showView('dashboard-view');
 });
 
@@ -389,4 +405,31 @@ async function loadCalendar() {
         row.appendChild(td);
     });
     table.appendChild(row);
+}
+
+async function loadSettings() {
+    const uRes = await fetch('/api/personality');
+    const user = await uRes.json();
+    document.getElementById('sarcasm-level').value = user.sarcasm;
+    document.getElementById('context-length').value = user.context_chars || 500;
+    const nRes = await fetch('/api/session_note');
+    const note = await nRes.json();
+    document.getElementById('session-note').value = note.note || '';
+}
+
+async function saveSettings() {
+    const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
+    const chars = parseInt(document.getElementById('context-length').value, 10);
+    const note = document.getElementById('session-note').value;
+    await fetch('/api/personality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sarcasm, context_chars: chars })
+    });
+    await fetch('/api/session_note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+    });
+    alert('Settings saved');
 }

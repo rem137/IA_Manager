@@ -2,7 +2,9 @@ import argparse
 from typing import List, Optional
 from ..models.project import Project
 from ..models.task import Task
-from ..services import storage, logger, planner
+from ..services import storage, logger, planner, memory
+from ..models.note import Note
+from ..models.user import User
 from ..utils import color, Fore
 import calendar
 from datetime import datetime, date
@@ -358,6 +360,69 @@ def assistant_chat(_args):
     chat_loop()
 
 
+def add_note(args):
+    notes = memory.load_notes()
+    note_id = max([n.id for n in notes], default=0) + 1
+    tags = [t.strip() for t in args.tags.split(',')] if args.tags else []
+    note = Note(id=note_id, text=args.text, tags=tags, project_id=args.project)
+    notes.append(note)
+    memory.save_notes(notes)
+    print("Note added")
+
+
+def list_notes(args):
+    notes = memory.load_notes()
+    for n in notes:
+        if n.internal:
+            continue
+        if args.project and n.project_id != args.project:
+            continue
+        if args.tag and args.tag not in n.tags:
+            continue
+        tg = f" [{', '.join(n.tags)}]" if n.tags else ""
+        proj = f" (proj {n.project_id})" if n.project_id else ""
+        print(f"{n.id}: {n.text}{tg}{proj}")
+
+
+def search_notes(args):
+    notes = memory.load_notes()
+    q = args.query.lower()
+    for n in notes:
+        if n.internal:
+            continue
+        if q in n.text.lower() or any(q in t.lower() for t in n.tags):
+            tg = f" [{', '.join(n.tags)}]" if n.tags else ""
+            proj = f" (proj {n.project_id})" if n.project_id else ""
+            print(f"{n.id}: {n.text}{tg}{proj}")
+
+
+def add_internal_note_cmd(args):
+    memory.add_internal_note(args.text)
+    print("Internal note added")
+
+
+def set_personality(args):
+    user = memory.load_user()
+    if args.sarcasm is not None:
+        user.sarcasm = max(0.0, min(1.0, args.sarcasm))
+    if args.context_chars is not None:
+        user.context_chars = max(100, min(1000, args.context_chars))
+    memory.save_user(user)
+    print("Personality updated")
+
+
+def show_personality(_args):
+    user = memory.load_user()
+    print(
+        f"User: {user.name}, sarcasm: {user.sarcasm}, context chars: {user.context_chars}"
+    )
+
+
+def set_session_note(args):
+    memory.save_custom_session_note(args.text)
+    print("Session note saved")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ia_manager")
     sub = parser.add_subparsers(dest="command")
@@ -459,5 +524,35 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("assistant").set_defaults(func=assistant_chat)
 
     sub.add_parser("calendar").set_defaults(func=show_calendar)
+
+    n_add = sub.add_parser("add_note")
+    n_add.add_argument("text")
+    n_add.add_argument("--tags", default="")
+    n_add.add_argument("--project", type=int)
+    n_add.set_defaults(func=add_note)
+
+    n_list = sub.add_parser("list_notes")
+    n_list.add_argument("--project", type=int)
+    n_list.add_argument("--tag")
+    n_list.set_defaults(func=list_notes)
+
+    n_search = sub.add_parser("search_notes")
+    n_search.add_argument("query")
+    n_search.set_defaults(func=search_notes)
+
+    priv = sub.add_parser("remember_note")
+    priv.add_argument("text")
+    priv.set_defaults(func=add_internal_note_cmd)
+
+    pers = sub.add_parser("set_personality")
+    pers.add_argument("--sarcasm", type=float)
+    pers.add_argument("--context_chars", type=int)
+    pers.set_defaults(func=set_personality)
+
+    sub.add_parser("show_personality").set_defaults(func=show_personality)
+
+    s_note = sub.add_parser("set_session_note")
+    s_note.add_argument("text")
+    s_note.set_defaults(func=set_session_note)
 
     return parser

@@ -1,6 +1,7 @@
 import shlex
 from ..utils import color, Fore
 from .commands import build_parser
+from ..services import memory, storage
 
 LOGO = r"""
   ___        __  __
@@ -34,6 +35,13 @@ COMMAND_HELP = """Available commands:
 
 def interactive_loop():
     parser = build_parser()
+    user = memory.load_user()
+    projects = storage.load_projects()
+    notes = memory.load_notes()
+    custom = memory.load_custom_session_note()
+    note = custom or memory.generate_session_note(projects, notes, user)
+    if note:
+        print(color(f"[Note] {note}", Fore.MAGENTA))
     print(color(LOGO, Fore.CYAN))
     print(color(COMMAND_HELP, Fore.YELLOW))
     while True:

@@ -69,10 +69,57 @@ Click a task to open a detail modal where you can start/stop the timer or mark i
 New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 The right column lists upcoming deadlines while the centre shows the task the AI recommends to start now.
+The **Browser** page now acts as a search engine over your notes and past messages. Enter a few keywords to get a short paragraph summarising the most relevant texts (max 500 characters).
 Navigate using the left menu to switch between the dashboard, project view,
-global tasks list, calendar, chat and settings.
+global tasks list, calendar, chat, the built-in browser and settings.
 
 The calendar view displays the current week's schedule. Tasks are grouped by day
 and show the time when provided. Data for a full week can be obtained via the
 `/api/calendar/week` endpoint which accepts an optional `start` parameter in
 `YYYY-MM-DD` format.
+
+## Persistent memory and notes
+
+KroniX now keeps a small database in `ia_manager/data/memory.json`. Notes can be
+added with:
+
+```
+python -m ia_manager add_note "My note" --tags idea,urgent --project 1
+```
+
+List or search notes using `list_notes` and `search_notes`. The personality of
+the assistant is configured in `ia_manager/data/personality.json`. Adjust the
+sarcasm level with:
+
+```
+python -m ia_manager set_personality --sarcasm 0.7
+```
+You can also change how much context is returned before each message with:
+
+```
+python -m ia_manager set_personality --context_chars 300
+```
+
+At the beginning of each CLI session a contextual summary is displayed. You can
+set your own message with `set_session_note` and clear it by setting an empty
+string.
+
+In the web interface, open the **Settings** page to adjust the assistant
+sarcasm level, the maximum length of search snippets and your custom session
+note.
+
+When chatting with the assistant, each message is stored in the memory file and
+automatically searched to provide context. The search engine now scores each
+note or past message based on how many query keywords it contains,
+similar to a web browser. The most relevant snippets are summarised and
+prepended before each request to keep token usage low.
+
+The assistant can also store private notes using the `remember_note` function.
+These internal notes are indexed for context but hidden from CLI commands and
+web search results.
+
+All chat messages are written to `ia_manager/data/log.txt` so you can audit the
+conversation history if needed.
+
+All callable functions are listed in `ia_manager/data/assistant_commands.json`
+for reference.
