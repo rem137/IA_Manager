@@ -97,3 +97,6 @@ python -m ia_manager set_personality --sarcasm 0.7
 At the beginning of each CLI session a contextual summary is displayed. You can
 set your own message with `set_session_note` and clear it by setting an empty
 string.
+
+In the web interface, open the **Settings** page to adjust your name, sarcasm
+level and custom session note.

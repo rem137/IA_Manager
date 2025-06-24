@@ -11,6 +11,7 @@ function showView(id) {
     if (id === 'tasks-view') loadAllTasks();
     if (id === 'dashboard-view') loadDashboard();
     if (id === 'calendar-view') loadCalendar();
+    if (id === 'settings-view') loadSettings();
 }
 
 async function loadAllTasks() {
@@ -272,6 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
     document.getElementById('accept-proposal').onclick = () => alert('Tâche acceptée');
     document.getElementById('decline-proposal').onclick = loadDashboard;
+    document.getElementById('save-settings').onclick = saveSettings;
+    loadSettings();
     showView('dashboard-view');
 });
 
@@ -389,4 +392,31 @@ async function loadCalendar() {
         row.appendChild(td);
     });
     table.appendChild(row);
+}
+
+async function loadSettings() {
+    const uRes = await fetch('/api/personality');
+    const user = await uRes.json();
+    document.getElementById('user-name').value = user.name || '';
+    document.getElementById('sarcasm-level').value = user.sarcasm;
+    const nRes = await fetch('/api/session_note');
+    const note = await nRes.json();
+    document.getElementById('session-note').value = note.note || '';
+}
+
+async function saveSettings() {
+    const name = document.getElementById('user-name').value;
+    const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
+    const note = document.getElementById('session-note').value;
+    await fetch('/api/personality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, sarcasm })
+    });
+    await fetch('/api/session_note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+    });
+    alert('Settings saved');
 }

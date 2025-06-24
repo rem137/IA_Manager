@@ -63,7 +63,14 @@
         </section>
         <section id="settings-view" class="view">
             <h2>Settings</h2>
-            <p>Coming soon...</p>
+            <div class="form">
+                <label>Name <input id="user-name"></label>
+                <label>Sarcasm <input id="sarcasm-level" type="number" min="0" max="1" step="0.1"></label>
+                <label>Session note
+                    <textarea id="session-note" rows="3"></textarea>
+                </label>
+                <button id="save-settings">Save</button>
+            </div>
         </section>
     </div>
     <aside id="context">
