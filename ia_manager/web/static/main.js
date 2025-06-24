@@ -410,21 +410,21 @@ async function loadCalendar() {
 async function loadSettings() {
     const uRes = await fetch('/api/personality');
     const user = await uRes.json();
-    document.getElementById('user-name').value = user.name || '';
     document.getElementById('sarcasm-level').value = user.sarcasm;
+    document.getElementById('context-length').value = user.context_chars || 500;
     const nRes = await fetch('/api/session_note');
     const note = await nRes.json();
     document.getElementById('session-note').value = note.note || '';
 }
 
 async function saveSettings() {
-    const name = document.getElementById('user-name').value;
     const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
+    const chars = parseInt(document.getElementById('context-length').value, 10);
     const note = document.getElementById('session-note').value;
     await fetch('/api/personality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, sarcasm })
+        body: JSON.stringify({ sarcasm, context_chars: chars })
     });
     await fetch('/api/session_note', {
         method: 'POST',

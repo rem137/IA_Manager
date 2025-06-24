@@ -162,8 +162,10 @@ def search_notes(
     return [n for _score_val, n in scored[:limit]]
 
 
-def get_context(query: str, max_chars: int = 500, include_internal: bool = False) -> str:
+def get_context(query: str, max_chars: int | None = None, include_internal: bool = False) -> str:
     """Return a short summary of history and notes related to the query."""
+    if max_chars is None:
+        max_chars = load_user().context_chars
     notes = search_notes(query, include_internal=include_internal)
     hist = search_history(query)
     parts = []

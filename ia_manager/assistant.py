@@ -175,7 +175,8 @@ def _execute(func_name: str, params: dict) -> str:
 
 def send_message(message: str) -> str:
     _ensure_client()
-    context = memory.get_context(message, max_chars=500, include_internal=True)
+    user = memory.load_user()
+    context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
@@ -286,7 +287,8 @@ def send_message_verbose(message: str) -> tuple[str, list[str]]:
 def send_message_events(message: str):
     """Yield events while processing the message."""
     _ensure_client()
-    context = memory.get_context(message, max_chars=500, include_internal=True)
+    user = memory.load_user()
+    context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")

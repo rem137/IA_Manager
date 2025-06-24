@@ -209,6 +209,21 @@ button.wide {
     margin-top: 10px;
 }
 
+#settings-view .settings-form {
+    flex-direction: column;
+    max-width: 320px;
+}
+
+#settings-view .settings-form label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+#settings-view .settings-form button {
+    align-self: flex-start;
+}
+
 #chat-log {
     flex: 1;
     padding: 15px;

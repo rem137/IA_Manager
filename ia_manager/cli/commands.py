@@ -403,17 +403,19 @@ def add_internal_note_cmd(args):
 
 def set_personality(args):
     user = memory.load_user()
-    if args.name:
-        user.name = args.name
     if args.sarcasm is not None:
         user.sarcasm = max(0.0, min(1.0, args.sarcasm))
+    if args.context_chars is not None:
+        user.context_chars = max(100, min(1000, args.context_chars))
     memory.save_user(user)
     print("Personality updated")
 
 
 def show_personality(_args):
     user = memory.load_user()
-    print(f"User: {user.name}, sarcasm: {user.sarcasm}")
+    print(
+        f"User: {user.name}, sarcasm: {user.sarcasm}, context chars: {user.context_chars}"
+    )
 
 
 def set_session_note(args):
@@ -543,8 +545,8 @@ def build_parser() -> argparse.ArgumentParser:
     priv.set_defaults(func=add_internal_note_cmd)
 
     pers = sub.add_parser("set_personality")
-    pers.add_argument("--name")
     pers.add_argument("--sarcasm", type=float)
+    pers.add_argument("--context_chars", type=int)
     pers.set_defaults(func=set_personality)
 
     sub.add_parser("show_personality").set_defaults(func=show_personality)

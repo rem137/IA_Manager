@@ -347,7 +347,8 @@ def search_api():
     query = request.args.get('q', '').strip()
     if not query:
         return jsonify({'result': ''})
-    result = memory.get_context(query, max_chars=500, include_internal=False)
+    user = memory.load_user()
+    result = memory.get_context(query, max_chars=user.context_chars, include_internal=False)
     return jsonify({'result': result})
 
 
@@ -367,6 +368,12 @@ def personality_api():
         except (TypeError, ValueError):
             pass
         user.sarcasm = max(0.0, min(1.0, user.sarcasm))
+    if 'context_chars' in data:
+        try:
+            user.context_chars = int(data['context_chars'])
+        except (TypeError, ValueError):
+            pass
+        user.context_chars = max(100, min(1000, user.context_chars))
     memory.save_user(user)
     return jsonify(user.to_dict())
 

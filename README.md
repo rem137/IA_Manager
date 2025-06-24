@@ -94,13 +94,19 @@ sarcasm level with:
 ```
 python -m ia_manager set_personality --sarcasm 0.7
 ```
+You can also change how much context is returned before each message with:
+
+```
+python -m ia_manager set_personality --context_chars 300
+```
 
 At the beginning of each CLI session a contextual summary is displayed. You can
 set your own message with `set_session_note` and clear it by setting an empty
 string.
 
-In the web interface, open the **Settings** page to adjust your name, sarcasm
-level and custom session note.
+In the web interface, open the **Settings** page to adjust the assistant
+sarcasm level, the maximum length of search snippets and your custom session
+note.
 
 When chatting with the assistant, each message is stored in the memory file and
 automatically searched to provide context. The search engine now scores each
