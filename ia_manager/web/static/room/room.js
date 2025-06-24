@@ -1,3 +1,5 @@
+import * as THREE from './lib/three.module.min.js';
+
 class RoomObject {
   constructor(id, mesh) {
     this.id = id;
