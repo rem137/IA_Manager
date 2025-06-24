@@ -8,7 +8,7 @@ import io
 import sys
 
 from .cli import commands
-from .services import memory
+from .services import memory, logger
 
 SYSTEM_PROMPT = (
     "Vous êtes \u00ab IA Manager \u00bb, un assistant destiné \u00e0 organiser mes projets et mes tâches.\n"
@@ -165,6 +165,9 @@ def _execute(func_name: str, params: dict) -> str:
 def send_message(message: str) -> str:
     _ensure_client()
     context = memory.get_context(message)
+    if context:
+        print(f"[CONTEXT] {context}")
+        logger.log(f"context: {context}")
     full = f"{context}\n{message}" if context else message
     memory.append_history("user", message)
     try:
@@ -270,6 +273,11 @@ def send_message_verbose(message: str) -> tuple[str, list[str]]:
 def send_message_events(message: str):
     """Yield events while processing the message."""
     _ensure_client()
+    context = memory.get_context(message)
+    if context:
+        print(f"[CONTEXT] {context}")
+        logger.log(f"context: {context}")
+        message = f"{context}\n{message}"
     try:
         print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
