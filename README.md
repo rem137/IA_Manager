@@ -76,3 +76,24 @@ The calendar view displays the current week's schedule. Tasks are grouped by day
 and show the time when provided. Data for a full week can be obtained via the
 `/api/calendar/week` endpoint which accepts an optional `start` parameter in
 `YYYY-MM-DD` format.
+
+## Persistent memory and notes
+
+KroniX now keeps a small database in `ia_manager/data/memory.json`. Notes can be
+added with:
+
+```
+python -m ia_manager add_note "My note" --tags idea,urgent --project 1
+```
+
+List or search notes using `list_notes` and `search_notes`. The personality of
+the assistant is configured in `ia_manager/data/personality.json`. Adjust the
+sarcasm level with:
+
+```
+python -m ia_manager set_personality --sarcasm 0.7
+```
+
+At the beginning of each CLI session a contextual summary is displayed. You can
+set your own message with `set_session_note` and clear it by setting an empty
+string.
