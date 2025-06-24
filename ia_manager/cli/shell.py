@@ -1,6 +1,7 @@
 import shlex
 from ..utils import color, Fore
 from .commands import build_parser
+from ..personality import speak
 
 LOGO = r"""
   ___        __  __
@@ -36,6 +37,7 @@ def interactive_loop():
     parser = build_parser()
     print(color(LOGO, Fore.CYAN))
     print(color(COMMAND_HELP, Fore.YELLOW))
+    print(color(speak("Ready to manage your life?"), Fore.MAGENTA))
     while True:
         try:
             raw = input(color("ia> ", Fore.GREEN)).strip()
@@ -58,5 +60,5 @@ def interactive_loop():
         except SystemExit:
             # argparse errors
             pass
-    print(color("Bye!", Fore.CYAN))
+    print(color(speak("Bye!"), Fore.CYAN))
 

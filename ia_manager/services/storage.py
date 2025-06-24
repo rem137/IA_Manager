@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import List
 from ..models.project import Project
+from ..models.note import Note
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 PROJECTS_FILE = DATA_DIR / "projects.json"
@@ -9,6 +10,7 @@ CONFIG_FILE = DATA_DIR / "config.json"
 LOG_FILE = DATA_DIR / "log.txt"
 DOCS_DIR = DATA_DIR / "docs"
 IMPROVEMENTS_FILE = DATA_DIR / "improvements.json"
+NOTES_FILE = DATA_DIR / "memory.json"
 
 DATA_DIR.mkdir(exist_ok=True)
 DOCS_DIR.mkdir(exist_ok=True)
@@ -49,3 +51,16 @@ def load_improvements() -> list:
 def save_improvements(items: list):
     with open(IMPROVEMENTS_FILE, "w", encoding="utf-8") as f:
         json.dump(items, f, indent=2, ensure_ascii=False)
+
+
+def load_notes() -> List[Note]:
+    if not NOTES_FILE.exists():
+        return []
+    with open(NOTES_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return [Note.from_dict(d) for d in data]
+
+
+def save_notes(notes: List[Note]):
+    with open(NOTES_FILE, "w", encoding="utf-8") as f:
+        json.dump([n.to_dict() for n in notes], f, indent=2, ensure_ascii=False)

@@ -76,3 +76,15 @@ The calendar view displays the current week's schedule. Tasks are grouped by day
 and show the time when provided. Data for a full week can be obtained via the
 `/api/calendar/week` endpoint which accepts an optional `start` parameter in
 `YYYY-MM-DD` format.
+
+## Persistent memory and notes
+
+KroniX now keeps a personal memory in `memory.json`. Use the `remember`
+command to store a note and `recall` to search it later. Notes can be
+linked to a project id and tagged with comma separated keywords.
+
+Example:
+```
+python -m ia_manager remember "Buy more coffee" --keywords=shopping
+python -m ia_manager recall --keyword=shopping
+```
