@@ -100,3 +100,11 @@ string.
 
 In the web interface, open the **Settings** page to adjust your name, sarcasm
 level and custom session note.
+
+When chatting with the assistant, each message is stored in the memory file and
+automatically searched to provide context. A lightweight search engine looks for
+matching notes and previous messages, then prepends a short summary before each
+request to keep token usage low.
+
+All callable functions are listed in `ia_manager/data/assistant_commands.json`
+for reference.

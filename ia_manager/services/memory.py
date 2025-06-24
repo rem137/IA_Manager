@@ -18,7 +18,7 @@ def _ensure_dirs():
 def load_memory() -> dict:
     _ensure_dirs()
     if not MEMORY_FILE.exists():
-        return {"notes": [], "session_note": ""}
+        return {"notes": [], "session_note": "", "history": []}
     with open(MEMORY_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -91,3 +91,59 @@ def generate_session_note(projects: List, notes: List[Note], user: User) -> str:
     elif user.sarcasm >= 0.3:
         msg += "Let's keep moving."
     return msg[:500]
+
+
+def load_history() -> list:
+    mem = load_memory()
+    return list(mem.get("history", []))
+
+
+def save_history(history: list):
+    mem = load_memory()
+    mem["history"] = history
+    save_memory(mem)
+
+
+def append_history(role: str, text: str):
+    history = load_history()
+    history.append({"role": role, "text": text, "ts": datetime.utcnow().isoformat()})
+    save_history(history)
+
+
+def search_history(query: str, limit: int = 3) -> list:
+    """Return recent messages containing the query."""
+    history = load_history()
+    q = query.lower()
+    results = []
+    for item in reversed(history):
+        if q in item.get("text", "").lower():
+            results.append(item)
+        if len(results) >= limit:
+            break
+    return list(reversed(results))
+
+
+def search_notes(query: str, notes: List[Note] | None = None, limit: int = 3) -> list[Note]:
+    if notes is None:
+        notes = load_notes()
+    q = query.lower()
+    results: list[Note] = []
+    for n in reversed(notes):
+        if q in n.text.lower() or any(q in t.lower() for t in n.tags):
+            results.append(n)
+        if len(results) >= limit:
+            break
+    return list(reversed(results))
+
+
+def get_context(query: str, max_chars: int = 300) -> str:
+    """Return a short summary of history and notes related to the query."""
+    notes = search_notes(query)
+    hist = search_history(query)
+    parts = []
+    if notes:
+        parts.append("Notes: " + "; ".join(n.text for n in notes))
+    if hist:
+        parts.append("Messages: " + "; ".join(h["text"] for h in hist))
+    ctx = " ".join(parts)
+    return ctx[:max_chars]

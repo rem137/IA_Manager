@@ -8,6 +8,7 @@ import io
 import sys
 
 from .cli import commands
+from .services import memory
 
 SYSTEM_PROMPT = (
     "Vous êtes \u00ab IA Manager \u00bb, un assistant destiné \u00e0 organiser mes projets et mes tâches.\n"
@@ -163,12 +164,15 @@ def _execute(func_name: str, params: dict) -> str:
 
 def send_message(message: str) -> str:
     _ensure_client()
+    context = memory.get_context(message)
+    full = f"{context}\n{message}" if context else message
+    memory.append_history("user", message)
     try:
         print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
             thread_id=_thread.id,
             role="user",
-            content=message,
+            content=full,
         )
 
         run = _client.beta.threads.runs.create(
@@ -231,7 +235,9 @@ def send_message(message: str) -> str:
         messages = _client.beta.threads.messages.list(thread_id=_thread.id, order="desc")
         for msg in messages.data:
             if msg.role == "assistant":
-                return msg.content[0].text.value
+                reply = msg.content[0].text.value
+                memory.append_history("assistant", reply)
+                return reply
     except openai.OpenAIError as exc:
         return f"API error fetching messages: {exc}"
     return ""
