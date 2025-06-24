@@ -291,8 +291,9 @@ def send_message_events(message: str):
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
         message = f"{context}\n{message}"
-    memory.append_history("user", message.split('\n')[-1])
-    logger.log(f"user: {message.split('\n')[-1]}")
+    last_line = message.splitlines()[-1]
+    memory.append_history("user", last_line)
+    logger.log(f"user: {last_line}")
     try:
         print("[DEBUG] Envoi du message à l'assistant...")
         _client.beta.threads.messages.create(
