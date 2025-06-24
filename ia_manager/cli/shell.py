@@ -1,6 +1,8 @@
 import shlex
 from ..utils import color, Fore
 from .commands import build_parser
+from ..services import memory
+from .. import personality
 
 LOGO = r"""
   ___        __  __
@@ -26,6 +28,10 @@ COMMAND_HELP = """Available commands:
   show_status
   plan_day [JJ/MM]
   recommend_task
+  remember TEXT [--project NAME --tags tag1 tag2]
+  recall KEYWORD
+  set_sarcasm LEVEL
+  set_name NAME
   calendar
   assistant
   help
@@ -36,11 +42,14 @@ def interactive_loop():
     parser = build_parser()
     print(color(LOGO, Fore.CYAN))
     print(color(COMMAND_HELP, Fore.YELLOW))
+    user = memory.load_user()
+    personality.say(f"Hello {user.get('name','user')}!")
     while True:
         try:
             raw = input(color("ia> ", Fore.GREEN)).strip()
         except (EOFError, KeyboardInterrupt):
             print()
+            personality.say("See you!")
             break
         if not raw:
             continue
@@ -58,5 +67,5 @@ def interactive_loop():
         except SystemExit:
             # argparse errors
             pass
-    print(color("Bye!", Fore.CYAN))
+    personality.say("Bye!")
 

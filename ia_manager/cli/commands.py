@@ -2,8 +2,9 @@ import argparse
 from typing import List, Optional
 from ..models.project import Project
 from ..models.task import Task
-from ..services import storage, logger, planner
+from ..services import storage, logger, planner, memory
 from ..utils import color, Fore
+from .. import personality
 import calendar
 from datetime import datetime, date
 
@@ -317,6 +318,46 @@ def recommend_task(_args):
         print(color(f"- {s}", Fore.MAGENTA))
 
 
+def remember_note(args):
+    notes = memory.load_notes()
+    note_id = max([n.get("id", 0) for n in notes], default=0) + 1
+    note = {
+        "id": note_id,
+        "text": args.text,
+        "tags": args.tags or [],
+        "project": args.project,
+    }
+    notes.append(note)
+    memory.save_notes(notes)
+    personality.say("Note saved")
+
+
+def recall_notes(args):
+    notes = memory.load_notes()
+    key = args.keyword.lower()
+    matches = [n for n in notes if key in n.get("text", "").lower() or any(key == t.lower() for t in n.get("tags", []))]
+    if not matches:
+        personality.say("No matching notes")
+        return
+    for n in matches:
+        tagstr = ",".join(n.get("tags", []))
+        print(f"[{n['id']}] {n['text']} {f'({tagstr})' if tagstr else ''}")
+
+
+def set_sarcasm(args):
+    user = memory.load_user()
+    user["sarcasm"] = args.level
+    memory.save_user(user)
+    personality.say(f"Sarcasm set to {args.level}")
+
+
+def set_username(args):
+    user = memory.load_user()
+    user["name"] = args.name
+    memory.save_user(user)
+    personality.say(f"Nice to meet you, {args.name}")
+
+
 def show_calendar(_args):
     projects = storage.load_projects()
     today = date.today()
@@ -457,6 +498,25 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("plan_self_update").set_defaults(func=plan_self_update)
 
     sub.add_parser("assistant").set_defaults(func=assistant_chat)
+
+    # Memory and preferences
+    mem_add = sub.add_parser("remember")
+    mem_add.add_argument("text")
+    mem_add.add_argument("--project")
+    mem_add.add_argument("--tags", nargs="*")
+    mem_add.set_defaults(func=remember_note)
+
+    mem_get = sub.add_parser("recall")
+    mem_get.add_argument("keyword")
+    mem_get.set_defaults(func=recall_notes)
+
+    sarc = sub.add_parser("set_sarcasm")
+    sarc.add_argument("level", type=int)
+    sarc.set_defaults(func=set_sarcasm)
+
+    uname = sub.add_parser("set_name")
+    uname.add_argument("name")
+    uname.set_defaults(func=set_username)
 
     sub.add_parser("calendar").set_defaults(func=show_calendar)
 
