@@ -2,8 +2,10 @@ import argparse
 from typing import List, Optional
 from ..models.project import Project
 from ..models.task import Task
+from ..models.note import Note
 from ..services import storage, logger, planner
 from ..utils import color, Fore
+from ..personality import speak
 import calendar
 from datetime import datetime, date
 
@@ -358,6 +360,36 @@ def assistant_chat(_args):
     chat_loop()
 
 
+def remember(args):
+    notes = storage.load_notes()
+    note_id = max([n.id for n in notes], default=0) + 1
+    keywords = args.keywords.split(',') if args.keywords else []
+    note = Note(id=note_id, text=args.text, keywords=keywords, project=args.project)
+    notes.append(note)
+    storage.save_notes(notes)
+    logger.log(f"Remembered note {note.id}")
+    print(speak(f"Noted {note.id}"))
+
+
+def recall(args):
+    notes = storage.load_notes()
+    results = []
+    for n in notes:
+        if args.project and n.project != args.project:
+            continue
+        if args.keyword:
+            if args.keyword not in n.keywords and args.keyword not in n.text:
+                continue
+        results.append(n)
+    if not results:
+        print(speak("Nothing found"))
+        return
+    for n in results:
+        kw = f" [keywords: {', '.join(n.keywords)}]" if n.keywords else ""
+        proj = f" (proj {n.project})" if n.project else ""
+        print(f"{n.id}:{proj}{kw} - {n.text}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ia_manager")
     sub = parser.add_subparsers(dest="command")
@@ -459,5 +491,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("assistant").set_defaults(func=assistant_chat)
 
     sub.add_parser("calendar").set_defaults(func=show_calendar)
+
+    mem_add = sub.add_parser("remember")
+    mem_add.add_argument("text")
+    mem_add.add_argument("--keywords")
+    mem_add.add_argument("--project", type=int)
+    mem_add.set_defaults(func=remember)
+
+    mem_rec = sub.add_parser("recall")
+    mem_rec.add_argument("--keyword")
+    mem_rec.add_argument("--project", type=int)
+    mem_rec.set_defaults(func=recall)
 
     return parser
