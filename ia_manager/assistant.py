@@ -177,14 +177,14 @@ def _get_thought(message: str) -> tuple[str, list[str], list[str]]:
     """Generate an internal thought using the local API."""
     user = memory.load_user()
     facts = memory.related_facts(message)
-    recent = memory.last_messages()
+    recent = memory.last_messages(count=1)
     if user.dev_mode:
         print(f"[DEV] related facts: {facts}")
         print(f"[DEV] last messages: {recent}")
     payload = {"souvenirs": facts, "derniers_messages": recent}
     thought = ""
     try:
-        resp = requests.post("http://localhost:8080/pensee", json=payload, timeout=5)
+        resp = requests.post("http://127.0.0.1:8080/pensee", json=payload, timeout=5)
         resp.raise_for_status()
         data = resp.json()
         thought = data.get("pensee", "")
