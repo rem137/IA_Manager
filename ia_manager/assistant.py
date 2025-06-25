@@ -2,6 +2,7 @@ import os
 import json
 import time
 import openai
+import requests
 from types import SimpleNamespace
 from contextlib import redirect_stdout
 import io
@@ -172,15 +173,38 @@ def _execute(func_name: str, params: dict) -> str:
     return buf.getvalue().strip()
 
 
+def _get_thought(message: str) -> str:
+    """Generate an internal thought using the local API."""
+    facts = memory.related_facts(message)
+    recent = memory.last_messages()
+    payload = {"souvenirs": facts, "derniers_messages": recent}
+    try:
+        resp = requests.post("http://localhost:8080/pensee", json=payload, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        thought = data.get("pensee", "")
+        if thought:
+            logger.log(f"pensee: {thought}")
+        return thought
+    except Exception as exc:
+        logger.log(f"pensee error: {exc}")
+        return ""
+
+
 
 def send_message(message: str) -> str:
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
+    thought = _get_thought(message)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-    full = f"{context}\n{message}" if context else message
+    content = f"Pensée interne de l\u2019IA : {thought}\nUtilisateur : {message}" if thought else f"Utilisateur : {message}"
+    if context:
+        full = f"{context}\n{content}"
+    else:
+        full = content
     memory.append_history("user", message)
     logger.log(f"user: {message}")
     try:
@@ -289,10 +313,15 @@ def send_message_events(message: str):
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
+    thought = _get_thought(message)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-        message = f"{context}\n{message}"
+    content = f"Pensée interne de l\u2019IA : {thought}\nUtilisateur : {message}" if thought else f"Utilisateur : {message}"
+    if context:
+        full = f"{context}\n{content}"
+    else:
+        full = content
     last_line = message.splitlines()[-1]
     memory.append_history("user", last_line)
     logger.log(f"user: {last_line}")
@@ -301,7 +330,7 @@ def send_message_events(message: str):
         _client.beta.threads.messages.create(
             thread_id=_thread.id,
             role="user",
-            content=message,
+            content=full,
         )
 
         run = _client.beta.threads.runs.create(

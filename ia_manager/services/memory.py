@@ -175,3 +175,22 @@ def get_context(query: str, max_chars: int | None = None, include_internal: bool
         parts.append("Messages: " + "; ".join(h["text"] for h in hist))
     ctx = " ".join(parts)
     return ctx[:max_chars]
+
+
+def related_facts(query: str, limit: int = 3) -> list[str]:
+    """Return short texts from notes and history related to the query."""
+    notes = search_notes(query, limit=limit, include_internal=True)
+    hist = search_history(query, limit=limit)
+    facts = [n.text for n in notes]
+    facts.extend(h.get("text", "") for h in hist)
+    return facts
+
+
+def last_messages(count: int = 5) -> list[str]:
+    """Return the most recent chat messages formatted with roles."""
+    history = load_history()
+    messages = []
+    for item in history[-count:]:
+        role = "Utilisateur" if item.get("role") == "user" else "IA"
+        messages.append(f"{role} : {item.get('text', '')}")
+    return messages
