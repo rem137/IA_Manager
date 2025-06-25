@@ -412,6 +412,7 @@ async function loadSettings() {
     const user = await uRes.json();
     document.getElementById('sarcasm-level').value = user.sarcasm;
     document.getElementById('context-length').value = user.context_chars || 500;
+    document.getElementById('dev-mode').checked = user.dev_mode || false;
     const nRes = await fetch('/api/session_note');
     const note = await nRes.json();
     document.getElementById('session-note').value = note.note || '';
@@ -420,11 +421,12 @@ async function loadSettings() {
 async function saveSettings() {
     const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
     const chars = parseInt(document.getElementById('context-length').value, 10);
+    const dev = document.getElementById('dev-mode').checked;
     const note = document.getElementById('session-note').value;
     await fetch('/api/personality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sarcasm, context_chars: chars })
+        body: JSON.stringify({ sarcasm, context_chars: chars, dev_mode: dev })
     });
     await fetch('/api/session_note', {
         method: 'POST',

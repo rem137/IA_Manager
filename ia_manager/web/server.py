@@ -374,6 +374,8 @@ def personality_api():
         except (TypeError, ValueError):
             pass
         user.context_chars = max(100, min(1000, user.context_chars))
+    if 'dev_mode' in data:
+        user.dev_mode = bool(data['dev_mode'])
     memory.save_user(user)
     return jsonify(user.to_dict())
 

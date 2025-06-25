@@ -175,8 +175,12 @@ def _execute(func_name: str, params: dict) -> str:
 
 def _get_thought(message: str) -> str:
     """Generate an internal thought using the local API."""
+    user = memory.load_user()
     facts = memory.related_facts(message)
     recent = memory.last_messages()
+    if user.dev_mode:
+        print(f"[DEV] related facts: {facts}")
+        print(f"[DEV] last messages: {recent}")
     payload = {"souvenirs": facts, "derniers_messages": recent}
     try:
         resp = requests.post("http://localhost:8080/pensee", json=payload, timeout=5)
@@ -185,6 +189,9 @@ def _get_thought(message: str) -> str:
         thought = data.get("pensee", "")
         if thought:
             logger.log(f"pensee: {thought}")
+            memory.add_internal_note(thought)
+            if user.dev_mode:
+                print(f"[DEV] pensee: {thought}")
         return thought
     except Exception as exc:
         logger.log(f"pensee error: {exc}")
