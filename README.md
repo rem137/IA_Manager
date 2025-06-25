@@ -119,8 +119,8 @@ These internal notes are indexed for context but hidden from CLI commands and
 web search results.
 
 A developer mode can be enabled in the personality settings. When activated,
-each chat displays the raw search snippets and the generated internal thought
-before sending the request to OpenAI.
+the chat interface shows a grey box containing the related search snippets and
+the generated internal thought before sending the request to OpenAI.
 
 All chat messages are written to `ia_manager/data/log.txt` so you can audit the
 conversation history if needed.

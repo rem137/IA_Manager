@@ -321,6 +321,24 @@ async function loadDashboard() {
     document.getElementById('proposal-text').textContent = rec;
 }
 
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function formatDebug(info) {
+    let html = '';
+    if (info.thought) {
+        html += '<b>Pensée:</b> ' + escapeHtml(info.thought) + '<br>';
+    }
+    if (info.facts && info.facts.length) {
+        html += '<b>Faits:</b><ul>' + info.facts.map(f => '<li>' + escapeHtml(f) + '</li>').join('') + '</ul>';
+    }
+    if (info.recent && info.recent.length) {
+        html += '<b>Messages:</b><ul>' + info.recent.map(m => '<li>' + escapeHtml(m) + '</li>').join('') + '</ul>';
+    }
+    return html;
+}
+
 
 async function sendMessage() {
     const input = document.getElementById('message');
@@ -346,6 +364,16 @@ async function sendMessage() {
     const src = new EventSource('/api/chat/stream?message=' + encodeURIComponent(msg));
     src.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
+        if (data.debug && document.getElementById('dev-mode').checked) {
+            const d = document.createElement('div');
+            d.className = 'dev-msg';
+            const ds = document.createElement('span');
+            ds.innerHTML = formatDebug(data.debug);
+            d.appendChild(ds);
+            log.insertBefore(d, r);
+            log.scrollTop = log.scrollHeight;
+            return;
+        }
         if (data.action) {
             const a = document.createElement('div');
             a.className = 'bot-msg';

@@ -173,7 +173,7 @@ def _execute(func_name: str, params: dict) -> str:
     return buf.getvalue().strip()
 
 
-def _get_thought(message: str) -> str:
+def _get_thought(message: str) -> tuple[str, list[str], list[str]]:
     """Generate an internal thought using the local API."""
     user = memory.load_user()
     facts = memory.related_facts(message)
@@ -182,6 +182,7 @@ def _get_thought(message: str) -> str:
         print(f"[DEV] related facts: {facts}")
         print(f"[DEV] last messages: {recent}")
     payload = {"souvenirs": facts, "derniers_messages": recent}
+    thought = ""
     try:
         resp = requests.post("http://localhost:8080/pensee", json=payload, timeout=5)
         resp.raise_for_status()
@@ -192,10 +193,9 @@ def _get_thought(message: str) -> str:
             memory.add_internal_note(thought)
             if user.dev_mode:
                 print(f"[DEV] pensee: {thought}")
-        return thought
     except Exception as exc:
         logger.log(f"pensee error: {exc}")
-        return ""
+    return thought, facts, recent
 
 
 
@@ -203,7 +203,7 @@ def send_message(message: str) -> str:
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
-    thought = _get_thought(message)
+    thought, facts, recent = _get_thought(message)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
@@ -320,7 +320,9 @@ def send_message_events(message: str):
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
-    thought = _get_thought(message)
+    thought, facts, recent = _get_thought(message)
+    if user.dev_mode:
+        yield {"debug": {"facts": facts, "recent": recent, "thought": thought}}
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
