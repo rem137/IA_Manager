@@ -207,7 +207,11 @@ def send_message(message: str) -> str:
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-    content = f"Pensée interne de l\u2019IA : {thought}\nUtilisateur : {message}" if thought else f"Utilisateur : {message}"
+    content = (
+        f"Pensée interne : {thought}\nUser : {message}"
+        if thought
+        else f"User : {message}"
+    )
     if context:
         full = f"{context}\n{content}"
     else:
@@ -326,7 +330,11 @@ def send_message_events(message: str):
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-    content = f"Pensée interne de l\u2019IA : {thought}\nUtilisateur : {message}" if thought else f"Utilisateur : {message}"
+    content = (
+        f"Pensée interne : {thought}\nUser : {message}"
+        if thought
+        else f"User : {message}"
+    )
     if context:
         full = f"{context}\n{content}"
     else:

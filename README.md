@@ -120,7 +120,14 @@ web search results.
 
 A developer mode can be enabled in the personality settings. When activated,
 the chat interface shows a grey box containing the related search snippets and
-the generated internal thought before sending the request to OpenAI.
+the generated internal thought before sending the request to OpenAI. The
+assistant prepends this thought to the OpenAI prompt using the format:
+
+```
+Pensée interne : <thought>
+User : <message>
+```
+
 
 All chat messages are written to `ia_manager/data/log.txt` so you can audit the
 conversation history if needed.
