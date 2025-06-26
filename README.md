@@ -140,3 +140,9 @@ for reference.
 Place any `gguf` files inside the `models` folder to experiment with local
 Llama models. They can be loaded through the Settings page but are not used
 automatically when chatting.
+
+Start the thought API with:
+```
+python -m ia_manager.thought_server
+```
+This requires `flask` and `llama-cpp-python`. The assistant calls `http://localhost:8080/pensee` to generate internal thoughts.
