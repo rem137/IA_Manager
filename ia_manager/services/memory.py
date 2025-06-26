@@ -171,27 +171,21 @@ def search_notes(
 
 
 def get_context(query: str, max_chars: int | None = None, include_internal: bool = False) -> str:
-    """Return a short summary of history and notes related to the query."""
+    """Return a short summary of notes related to the query."""
     if max_chars is None:
         max_chars = load_user().context_chars
     notes = search_notes(query, include_internal=include_internal)
-    hist = search_history(query)
     parts = []
     if notes:
         parts.append("Notes: " + "; ".join(n.text for n in notes))
-    if hist:
-        parts.append("Messages: " + "; ".join(h["text"] for h in hist))
     ctx = " ".join(parts)
     return ctx[:max_chars]
 
 
 def related_facts(query: str, limit: int = 3) -> list[str]:
-    """Return short texts from notes and history related to the query."""
+    """Return short texts from notes related to the query."""
     notes = search_notes(query, limit=limit, include_internal=True)
-    hist = search_history(query, limit=limit)
-    facts = [n.text for n in notes]
-    facts.extend(h.get("text", "") for h in hist)
-    return facts
+    return [n.text for n in notes]
 
 
 def last_messages(count: int = 5) -> list[str]:

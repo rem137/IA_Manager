@@ -69,7 +69,7 @@ Click a task to open a detail modal where you can start/stop the timer or mark i
 New tasks are added through a dedicated form with name, description and deadline fields.
 Action notifications suggested by the AI appear in the bottom right corner with accept/decline buttons.
 The right column lists upcoming deadlines while the centre shows the task the AI recommends to start now.
-The **Browser** page now acts as a search engine over your notes and past messages. Enter a few keywords to get a short paragraph summarising the most relevant texts (max 500 characters).
+The **Browser** page now acts as a search engine over your saved souvenirs. Enter a few keywords to get a short paragraph summarising the most relevant texts (max 500 characters).
 Navigate using the left menu to switch between the dashboard, project view,
 global tasks list, calendar, chat, the built-in browser and settings.
 
@@ -108,11 +108,12 @@ In the web interface, open the **Settings** page to adjust the assistant
 sarcasm level, the maximum length of search snippets and your custom session
 note.
 
-When chatting with the assistant, each message is stored in the memory file and
-automatically searched for related facts. These facts along with the last
-chat messages are sent to a local API at `http://localhost:8080/pensee` which
-returns an internal thought guiding the assistant. This thought is prepended
-before your message so the OpenAI model can respond with better context.
+When chatting with the assistant, the local model generates "souvenirs" that are
+stored in the memory file. Only these souvenirs are searched for related
+information. The most relevant ones together with the latest chat lines are sent
+to a local API at `http://localhost:8080/pensee` which returns an internal
+thought guiding the assistant. This thought is prepended before your message so
+the OpenAI model can reply with better context.
 
 The assistant can also store private notes using the `remember_note` function.
 These internal notes are indexed for context but hidden from CLI commands and
@@ -141,8 +142,8 @@ Place any `gguf` files inside the `models` folder to experiment with local
 Llama models. They can be loaded through the Settings page but are not used
 automatically when chatting.
 
-Start the thought API with:
+Start both the web interface and the thought API with:
 ```
-python -m ia_manager.thought_server
+python -m ia_manager.start_servers
 ```
 This requires `flask` and `llama-cpp-python`. The assistant calls `http://localhost:8080/pensee` to generate internal thoughts.
