@@ -49,6 +49,14 @@ def add_internal_note(text: str):
     save_notes(notes)
 
 
+def add_fact(text: str):
+    """Store an important fact visible in search results."""
+    notes = load_notes()
+    note_id = max([n.id for n in notes], default=0) + 1
+    notes.append(Note(id=note_id, text=text))
+    save_notes(notes)
+
+
 def load_custom_session_note() -> str:
     mem = load_memory()
     return mem.get("session_note", "")

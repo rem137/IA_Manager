@@ -2,7 +2,6 @@ import os
 import json
 import time
 import openai
-import requests
 from types import SimpleNamespace
 from contextlib import redirect_stdout
 import io
@@ -137,6 +136,16 @@ FUNCTIONS = [
             "additionalProperties": False,
         },
     },
+    {
+        "name": "remember_fact",
+        "description": "Enregistrer une information importante visible dans la mémoire",
+        "parameters": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "Contenu"}},
+            "required": ["text"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 TOOLS = [{"type": "function", "function": f} for f in FUNCTIONS]
@@ -152,6 +161,7 @@ FUNC_MAP = {
     "mark_done": commands.mark_done,
     "recommend_task": commands.recommend_task,
     "remember_note": commands.add_internal_note_cmd,
+    "remember_fact": commands.add_fact_cmd,
 }
 
 _client = None
@@ -173,29 +183,6 @@ def _execute(func_name: str, params: dict) -> str:
     return buf.getvalue().strip()
 
 
-def _get_thought(message: str) -> tuple[str, list[str], list[str]]:
-    """Generate an internal thought using the local API."""
-    user = memory.load_user()
-    facts = memory.related_facts(message)
-    recent = memory.last_messages(count=1)
-    if user.dev_mode:
-        print(f"[DEV] related facts: {facts}")
-        print(f"[DEV] last messages: {recent}")
-    payload = {"souvenirs": facts, "derniers_messages": recent}
-    thought = ""
-    try:
-        resp = requests.post("http://127.0.0.1:8080/pensee", json=payload, timeout=5)
-        resp.raise_for_status()
-        data = resp.json()
-        thought = data.get("pensee", "")
-        if thought:
-            logger.log(f"pensee: {thought}")
-            memory.add_internal_note(thought)
-            if user.dev_mode:
-                print(f"[DEV] pensee: {thought}")
-    except Exception as exc:
-        logger.log(f"pensee error: {exc}")
-    return thought, facts, recent
 
 
 
@@ -203,19 +190,12 @@ def send_message(message: str) -> str:
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
-    thought, facts, recent = _get_thought(message)
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-    content = (
-        f"Pensée interne : {thought}\nUser : {message}"
-        if thought
-        else f"User : {message}"
-    )
-    if context:
-        full = f"{context}\n{content}"
+        full = f"mémoire pouvant être utile: {context}\nUser : {message}"
     else:
-        full = content
+        full = f"User : {message}"
     memory.append_history("user", message)
     logger.log(f"user: {message}")
     try:
@@ -324,21 +304,14 @@ def send_message_events(message: str):
     _ensure_client()
     user = memory.load_user()
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
-    thought, facts, recent = _get_thought(message)
     if user.dev_mode:
-        yield {"debug": {"facts": facts, "recent": recent, "thought": thought}}
+        yield {"debug": {"memory": context}}
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")
-    content = (
-        f"Pensée interne : {thought}\nUser : {message}"
-        if thought
-        else f"User : {message}"
-    )
-    if context:
-        full = f"{context}\n{content}"
+        full = f"mémoire pouvant être utile: {context}\nUser : {message}"
     else:
-        full = content
+        full = f"User : {message}"
     last_line = message.splitlines()[-1]
     memory.append_history("user", last_line)
     logger.log(f"user: {last_line}")

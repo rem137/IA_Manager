@@ -116,15 +116,15 @@ prepended before each request to keep token usage low.
 
 The assistant can also store private notes using the `remember_note` function.
 These internal notes are indexed for context but hidden from CLI commands and
-web search results.
+web search results. Use `remember_fact` to store a regular fact that will later
+appear in search results.
 
 A developer mode can be enabled in the personality settings. When activated,
-the chat interface shows a grey box containing the related search snippets and
-the generated internal thought before sending the request to OpenAI. The
-assistant prepends this thought to the OpenAI prompt using the format:
+the chat interface shows a grey box containing the search snippets sent with
+each request. The assistant receives this context using the format:
 
 ```
-Pensée interne : <thought>
+mémoire pouvant être utile: <context>
 User : <message>
 ```
 

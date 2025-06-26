@@ -401,6 +401,11 @@ def add_internal_note_cmd(args):
     print("Internal note added")
 
 
+def add_fact_cmd(args):
+    memory.add_fact(args.text)
+    print("Fact recorded")
+
+
 def set_personality(args):
     user = memory.load_user()
     if args.sarcasm is not None:
@@ -545,6 +550,10 @@ def build_parser() -> argparse.ArgumentParser:
     priv = sub.add_parser("remember_note")
     priv.add_argument("text")
     priv.set_defaults(func=add_internal_note_cmd)
+
+    fact = sub.add_parser("remember_fact")
+    fact.add_argument("text")
+    fact.set_defaults(func=add_fact_cmd)
 
     pers = sub.add_parser("set_personality")
     pers.add_argument("--sarcasm", type=float)

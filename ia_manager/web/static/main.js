@@ -327,14 +327,8 @@ function escapeHtml(str) {
 
 function formatDebug(info) {
     let html = '';
-    if (info.thought) {
-        html += '<b>Pensée:</b> ' + escapeHtml(info.thought) + '<br>';
-    }
-    if (info.facts && info.facts.length) {
-        html += '<b>Faits:</b><ul>' + info.facts.map(f => '<li>' + escapeHtml(f) + '</li>').join('') + '</ul>';
-    }
-    if (info.recent && info.recent.length) {
-        html += '<b>Messages:</b><ul>' + info.recent.map(m => '<li>' + escapeHtml(m) + '</li>').join('') + '</ul>';
+    if (info.memory) {
+        html += '<b>Mémoire:</b> ' + escapeHtml(info.memory);
     }
     return html;
 }
