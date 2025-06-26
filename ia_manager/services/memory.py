@@ -49,6 +49,14 @@ def add_internal_note(text: str):
     save_notes(notes)
 
 
+def add_fact(text: str):
+    """Store an important fact visible in search results."""
+    notes = load_notes()
+    note_id = max([n.id for n in notes], default=0) + 1
+    notes.append(Note(id=note_id, text=text))
+    save_notes(notes)
+
+
 def load_custom_session_note() -> str:
     mem = load_memory()
     return mem.get("session_note", "")
@@ -163,15 +171,28 @@ def search_notes(
 
 
 def get_context(query: str, max_chars: int | None = None, include_internal: bool = False) -> str:
-    """Return a short summary of history and notes related to the query."""
+    """Return a short summary of notes related to the query."""
     if max_chars is None:
         max_chars = load_user().context_chars
     notes = search_notes(query, include_internal=include_internal)
-    hist = search_history(query)
     parts = []
     if notes:
         parts.append("Notes: " + "; ".join(n.text for n in notes))
-    if hist:
-        parts.append("Messages: " + "; ".join(h["text"] for h in hist))
     ctx = " ".join(parts)
     return ctx[:max_chars]
+
+
+def related_facts(query: str, limit: int = 3) -> list[str]:
+    """Return short texts from notes related to the query."""
+    notes = search_notes(query, limit=limit, include_internal=True)
+    return [n.text for n in notes]
+
+
+def last_messages(count: int = 5) -> list[str]:
+    """Return the most recent chat messages formatted with roles."""
+    history = load_history()
+    messages = []
+    for item in history[-count:]:
+        role = "Utilisateur" if item.get("role") == "user" else "IA"
+        messages.append(f"{role} : {item.get('text', '')}")
+    return messages
