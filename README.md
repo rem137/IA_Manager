@@ -146,4 +146,6 @@ Start both the web interface and the thought API with:
 ```
 python -m ia_manager.start_servers
 ```
-This requires `flask` and `llama-cpp-python`. The assistant calls `http://localhost:8080/pensee` to generate internal thoughts.
+The helper script launches the two Flask apps in separate threads (without
+reloaders). This requires `flask` and `llama-cpp-python`. The assistant calls
+`http://localhost:8080/pensee` to generate internal thoughts.
