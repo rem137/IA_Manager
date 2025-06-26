@@ -134,3 +134,11 @@ conversation history if needed.
 
 All callable functions are listed in `ia_manager/data/assistant_commands.json`
 for reference.
+
+## Local models
+
+Place any `gguf` files inside the `models` folder to use a local Llama model.
+Select the desired model in the Settings page and edit the prompt used to
+generate new memory notes. When a message is sent, it is first processed by the
+local model which may store a new fact before the OpenAI assistant receives the
+query along with relevant search results.

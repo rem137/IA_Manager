@@ -8,7 +8,7 @@ import io
 import sys
 
 from .cli import commands
-from .services import memory, logger
+from .services import memory, logger, local_model
 
 SYSTEM_PROMPT = (
     "Vous êtes \u00ab IA Manager \u00bb, un assistant destiné \u00e0 organiser mes projets et mes tâches.\n"
@@ -189,6 +189,9 @@ def _execute(func_name: str, params: dict) -> str:
 def send_message(message: str) -> str:
     _ensure_client()
     user = memory.load_user()
+    note = local_model.process_message(message)
+    if user.dev_mode and note:
+        print(f"[LOCAL NOTE] {note}")
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
     if context:
         print(f"[CONTEXT] {context}")
@@ -303,9 +306,10 @@ def send_message_events(message: str):
     """Yield events while processing the message."""
     _ensure_client()
     user = memory.load_user()
+    note = local_model.process_message(message)
     context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
     if user.dev_mode:
-        yield {"debug": {"memory": context}}
+        yield {"debug": {"memory": context, "local": note}}
     if context:
         print(f"[CONTEXT] {context}")
         logger.log(f"context: {context}")

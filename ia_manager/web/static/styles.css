@@ -177,6 +177,7 @@ li.done {
 }
 
 .form input,
+.form select,
 .form textarea {
     flex: 1;
     background: #222;

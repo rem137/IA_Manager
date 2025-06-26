@@ -435,6 +435,16 @@ async function loadSettings() {
     document.getElementById('sarcasm-level').value = user.sarcasm;
     document.getElementById('context-length').value = user.context_chars || 500;
     document.getElementById('dev-mode').checked = user.dev_mode || false;
+    const mRes = await fetch('/api/local_models');
+    const models = await mRes.json();
+    const sel = document.getElementById('local-model');
+    sel.innerHTML = '<option value="">-- none --</option>';
+    models.models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = m; sel.appendChild(opt);
+    });
+    sel.value = user.local_model || '';
+    document.getElementById('local-prompt').value = user.local_prompt || '';
     const nRes = await fetch('/api/session_note');
     const note = await nRes.json();
     document.getElementById('session-note').value = note.note || '';
@@ -444,11 +454,13 @@ async function saveSettings() {
     const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
     const chars = parseInt(document.getElementById('context-length').value, 10);
     const dev = document.getElementById('dev-mode').checked;
+    const localModel = document.getElementById('local-model').value;
+    const localPrompt = document.getElementById('local-prompt').value;
     const note = document.getElementById('session-note').value;
     await fetch('/api/personality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sarcasm, context_chars: chars, dev_mode: dev })
+        body: JSON.stringify({ sarcasm, context_chars: chars, dev_mode: dev, local_model: localModel, local_prompt: localPrompt })
     });
     await fetch('/api/session_note', {
         method: 'POST',

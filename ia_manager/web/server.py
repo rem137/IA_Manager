@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template, Response
 from datetime import datetime, timedelta
 import re
 import json
-from ..services import storage, planner, logger, memory
+from ..services import storage, planner, logger, memory, local_model
 from .. import assistant
 from ..models.project import Project
 from ..models.task import Task
@@ -352,6 +352,12 @@ def search_api():
     return jsonify({'result': result})
 
 
+@app.route('/api/local_models')
+def local_models_api():
+    """Return available local model filenames."""
+    return jsonify({'models': local_model.available_models()})
+
+
 @app.route('/api/personality', methods=['GET', 'POST'])
 def personality_api():
     """Get or update user personality."""
@@ -376,6 +382,10 @@ def personality_api():
         user.context_chars = max(100, min(1000, user.context_chars))
     if 'dev_mode' in data:
         user.dev_mode = bool(data['dev_mode'])
+    if 'local_model' in data:
+        user.local_model = data['local_model']
+    if 'local_prompt' in data:
+        user.local_prompt = data['local_prompt']
     memory.save_user(user)
     return jsonify(user.to_dict())
 
