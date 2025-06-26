@@ -39,6 +39,7 @@ def current_model() -> Optional[str]:
 
 
 def ensure_loaded() -> None:
+    global _llm, _model_name
     user = memory.load_user()
     name = user.local_model
     if name and name != _model_name:

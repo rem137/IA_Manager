@@ -330,6 +330,10 @@ function formatDebug(info) {
     if (info.memory) {
         html += '<b>Mémoire:</b> ' + escapeHtml(info.memory);
     }
+    if (info.thought) {
+        if (html) html += '<br>';
+        html += '<b>Pensée:</b> ' + escapeHtml(info.thought);
+    }
     return html;
 }
 

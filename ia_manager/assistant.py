@@ -6,9 +6,10 @@ from types import SimpleNamespace
 from contextlib import redirect_stdout
 import io
 import sys
+import requests
 
 from .cli import commands
-from .services import memory, logger, local_model
+from .services import memory, logger
 
 SYSTEM_PROMPT = (
     "Vous êtes \u00ab IA Manager \u00bb, un assistant destiné \u00e0 organiser mes projets et mes tâches.\n"
@@ -183,22 +184,38 @@ def _execute(func_name: str, params: dict) -> str:
     return buf.getvalue().strip()
 
 
+def _get_thought(message: str) -> str:
+    """Call the local thought API and store the returned idea."""
+    facts = memory.related_facts(message)
+    recent = memory.last_messages()
+    payload = {"souvenirs": facts, "derniers_messages": recent}
+    try:
+        resp = requests.post("http://localhost:8080/pensee", json=payload, timeout=5)
+        data = resp.json()
+        thought = data.get("pensee", "")
+    except Exception as exc:  # pragma: no cover - runtime issue
+        print(f"[ERROR] Thought API failed: {exc}")
+        return ""
+    if thought:
+        memory.add_internal_note(thought)
+    return thought
+
+
 
 
 
 def send_message(message: str) -> str:
     _ensure_client()
     user = memory.load_user()
-    note = local_model.process_message(message)
-    if user.dev_mode and note:
-        print(f"[LOCAL NOTE] {note}")
-    context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
-    if context:
-        print(f"[CONTEXT] {context}")
-        logger.log(f"context: {context}")
-        full = f"mémoire pouvant être utile: {context}\nUser : {message}"
+    thought = _get_thought(message)
+    if user.dev_mode:
+        facts = "; ".join(memory.related_facts(message))
+        print(f"[FACTS] {facts}")
+        print(f"[THOUGHT] {thought}")
+    if thought:
+        full = f"Pensée interne de l'IA : {thought}\nUtilisateur : {message}"
     else:
-        full = f"User : {message}"
+        full = f"Utilisateur : {message}"
     memory.append_history("user", message)
     logger.log(f"user: {message}")
     try:
@@ -306,16 +323,14 @@ def send_message_events(message: str):
     """Yield events while processing the message."""
     _ensure_client()
     user = memory.load_user()
-    note = local_model.process_message(message)
-    context = memory.get_context(message, max_chars=user.context_chars, include_internal=True)
+    thought = _get_thought(message)
+    facts = memory.related_facts(message)
     if user.dev_mode:
-        yield {"debug": {"memory": context, "local": note}}
-    if context:
-        print(f"[CONTEXT] {context}")
-        logger.log(f"context: {context}")
-        full = f"mémoire pouvant être utile: {context}\nUser : {message}"
+        yield {"debug": {"memory": "; ".join(facts), "thought": thought}}
+    if thought:
+        full = f"Pensée interne de l'IA : {thought}\nUtilisateur : {message}"
     else:
-        full = f"User : {message}"
+        full = f"Utilisateur : {message}"
     last_line = message.splitlines()[-1]
     memory.append_history("user", last_line)
     logger.log(f"user: {last_line}")

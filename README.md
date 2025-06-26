@@ -109,10 +109,10 @@ sarcasm level, the maximum length of search snippets and your custom session
 note.
 
 When chatting with the assistant, each message is stored in the memory file and
-automatically searched to provide context. The search engine now scores each
-note or past message based on how many query keywords it contains,
-similar to a web browser. The most relevant snippets are summarised and
-prepended before each request to keep token usage low.
+automatically searched for related facts. These facts along with the last
+chat messages are sent to a local API at `http://localhost:8080/pensee` which
+returns an internal thought guiding the assistant. This thought is prepended
+before your message so the OpenAI model can respond with better context.
 
 The assistant can also store private notes using the `remember_note` function.
 These internal notes are indexed for context but hidden from CLI commands and
@@ -120,12 +120,12 @@ web search results. Use `remember_fact` to store a regular fact that will later
 appear in search results.
 
 A developer mode can be enabled in the personality settings. When activated,
-the chat interface shows a grey box containing the search snippets sent with
-each request. The assistant receives this context using the format:
+the chat interface shows a grey debug box containing the related facts and the
+internal thought used for the response. The prompt sent to OpenAI looks like:
 
 ```
-mémoire pouvant être utile: <context>
-User : <message>
+Pensée interne de l'IA : <thought>
+Utilisateur : <message>
 ```
 
 
@@ -137,8 +137,6 @@ for reference.
 
 ## Local models
 
-Place any `gguf` files inside the `models` folder to use a local Llama model.
-Select the desired model in the Settings page and edit the prompt used to
-generate new memory notes. When a message is sent, it is first processed by the
-local model which may store a new fact before the OpenAI assistant receives the
-query along with relevant search results.
+Place any `gguf` files inside the `models` folder to experiment with local
+Llama models. They can be loaded through the Settings page but are not used
+automatically when chatting.
