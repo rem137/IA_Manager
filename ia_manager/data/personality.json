@@ -1,5 +1,8 @@
 {
   "name": "Alex",
   "sarcasm": 0.5,
-  "context_chars": 500
+  "context_chars": 500,
+  "dev_mode": false,
+  "local_model": "",
+  "local_prompt": "Sauvegarde ce qui est important: {message}"
 }

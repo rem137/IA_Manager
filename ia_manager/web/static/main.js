@@ -321,6 +321,22 @@ async function loadDashboard() {
     document.getElementById('proposal-text').textContent = rec;
 }
 
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function formatDebug(info) {
+    let html = '';
+    if (info.memory) {
+        html += '<b>Mémoire:</b> ' + escapeHtml(info.memory);
+    }
+    if (info.thought) {
+        if (html) html += '<br>';
+        html += '<b>Pensée:</b> ' + escapeHtml(info.thought);
+    }
+    return html;
+}
+
 
 async function sendMessage() {
     const input = document.getElementById('message');
@@ -346,6 +362,16 @@ async function sendMessage() {
     const src = new EventSource('/api/chat/stream?message=' + encodeURIComponent(msg));
     src.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
+        if (data.debug && document.getElementById('dev-mode').checked) {
+            const d = document.createElement('div');
+            d.className = 'dev-msg';
+            const ds = document.createElement('span');
+            ds.innerHTML = formatDebug(data.debug);
+            d.appendChild(ds);
+            log.insertBefore(d, r);
+            log.scrollTop = log.scrollHeight;
+            return;
+        }
         if (data.action) {
             const a = document.createElement('div');
             a.className = 'bot-msg';
@@ -412,6 +438,17 @@ async function loadSettings() {
     const user = await uRes.json();
     document.getElementById('sarcasm-level').value = user.sarcasm;
     document.getElementById('context-length').value = user.context_chars || 500;
+    document.getElementById('dev-mode').checked = user.dev_mode || false;
+    const mRes = await fetch('/api/local_models');
+    const models = await mRes.json();
+    const sel = document.getElementById('local-model');
+    sel.innerHTML = '<option value="">-- none --</option>';
+    models.models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = m; sel.appendChild(opt);
+    });
+    sel.value = user.local_model || '';
+    document.getElementById('local-prompt').value = user.local_prompt || '';
     const nRes = await fetch('/api/session_note');
     const note = await nRes.json();
     document.getElementById('session-note').value = note.note || '';
@@ -420,11 +457,14 @@ async function loadSettings() {
 async function saveSettings() {
     const sarcasm = parseFloat(document.getElementById('sarcasm-level').value);
     const chars = parseInt(document.getElementById('context-length').value, 10);
+    const dev = document.getElementById('dev-mode').checked;
+    const localModel = document.getElementById('local-model').value;
+    const localPrompt = document.getElementById('local-prompt').value;
     const note = document.getElementById('session-note').value;
     await fetch('/api/personality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sarcasm, context_chars: chars })
+        body: JSON.stringify({ sarcasm, context_chars: chars, dev_mode: dev, local_model: localModel, local_prompt: localPrompt })
     });
     await fetch('/api/session_note', {
         method: 'POST',

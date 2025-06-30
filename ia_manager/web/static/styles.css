@@ -177,6 +177,7 @@ li.done {
 }
 
 .form input,
+.form select,
 .form textarea {
     flex: 1;
     background: #222;
@@ -287,6 +288,17 @@ button.wide {
     background: #eee;
     color: #000;
     border-bottom-left-radius: 0;
+}
+
+.dev-msg {
+    justify-content: center;
+}
+
+.dev-msg span {
+    background: #444;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 8px;
 }
 
 .bot-msg span.action {

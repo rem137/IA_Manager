@@ -401,12 +401,19 @@ def add_internal_note_cmd(args):
     print("Internal note added")
 
 
+def add_fact_cmd(args):
+    memory.add_fact(args.text)
+    print("Fact recorded")
+
+
 def set_personality(args):
     user = memory.load_user()
     if args.sarcasm is not None:
         user.sarcasm = max(0.0, min(1.0, args.sarcasm))
     if args.context_chars is not None:
         user.context_chars = max(100, min(1000, args.context_chars))
+    if args.dev_mode is not None:
+        user.dev_mode = args.dev_mode
     memory.save_user(user)
     print("Personality updated")
 
@@ -414,7 +421,7 @@ def set_personality(args):
 def show_personality(_args):
     user = memory.load_user()
     print(
-        f"User: {user.name}, sarcasm: {user.sarcasm}, context chars: {user.context_chars}"
+        f"User: {user.name}, sarcasm: {user.sarcasm}, context chars: {user.context_chars}, dev mode: {user.dev_mode}"
     )
 
 
@@ -544,9 +551,16 @@ def build_parser() -> argparse.ArgumentParser:
     priv.add_argument("text")
     priv.set_defaults(func=add_internal_note_cmd)
 
+    fact = sub.add_parser("remember_fact")
+    fact.add_argument("text")
+    fact.set_defaults(func=add_fact_cmd)
+
     pers = sub.add_parser("set_personality")
     pers.add_argument("--sarcasm", type=float)
     pers.add_argument("--context_chars", type=int)
+    pers.add_argument("--dev", dest="dev_mode", action="store_true")
+    pers.add_argument("--no-dev", dest="dev_mode", action="store_false")
+    pers.set_defaults(dev_mode=None)
     pers.set_defaults(func=set_personality)
 
     sub.add_parser("show_personality").set_defaults(func=show_personality)
